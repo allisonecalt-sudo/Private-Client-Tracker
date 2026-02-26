@@ -435,21 +435,21 @@ tbody tr:hover td { background: var(--surface2); }
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem">
 
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.25rem 1rem;box-shadow:var(--shadow);border-top:3px solid var(--green)">
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">In your pocket</div>
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">Earned this month</div>
           <div style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:500;line-height:1" id="traj-received">₪—</div>
-          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">received this month</div>
+          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">sessions that happened</div>
         </div>
 
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.25rem 1rem;box-shadow:var(--shadow);border-top:3px solid var(--amber)">
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">Owed to you</div>
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">Still to collect</div>
           <div style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:500;line-height:1" id="traj-outstanding">₪—</div>
-          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">sessions happened, not paid</div>
+          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">yours, just not received yet</div>
         </div>
 
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.25rem 1rem;box-shadow:var(--shadow);border-top:3px solid var(--border)">
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">If all scheduled happen</div>
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">If scheduled happen</div>
           <div style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:500;line-height:1;color:var(--text-muted)" id="traj-projected">—</div>
-          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">potential this month</div>
+          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">potential extra this month</div>
         </div>
 
       </div>
@@ -767,19 +767,19 @@ async function renderDashboard() {
   const monthStart = getMonthStart();
   const thisMonthSessions = sessions.filter(s => s.date >= monthStart);
 
-  // In your pocket = paid sessions this month
-  let receivedThisMonth = 0;
-  thisMonthSessions.filter(s => getSessionStatus(s) === 'paid').forEach(s => {
-    receivedThisMonth += NET(clientRate(s.client_id));
+  // Earned this month = all happened sessions (paid or not — money is yours once it happened)
+  let earnedThisMonth = 0;
+  thisMonthSessions.filter(s => getSessionStatus(s) === 'happened' || getSessionStatus(s) === 'paid').forEach(s => {
+    earnedThisMonth += NET(clientRate(s.client_id));
   });
 
-  // Owed to you = happened, not paid yet (this month)
-  let outstandingThisMonth = 0;
-  thisMonthSessions.filter(s => getSessionStatus(s) === 'happened').forEach(s => {
-    outstandingThisMonth += NET(clientRate(s.client_id));
+  // Still to collect = happened but not physically received yet (all time, not just this month)
+  let stillToCollect = 0;
+  sessions.filter(s => getSessionStatus(s) === 'happened').forEach(s => {
+    stillToCollect += NET(clientRate(s.client_id));
   });
 
-  // If all scheduled happen = scheduled sessions this month
+  // Potential = scheduled sessions this month if they happen
   let scheduledThisMonth = 0;
   thisMonthSessions.filter(s => getSessionStatus(s) === 'scheduled').forEach(s => {
     scheduledThisMonth += NET(clientRate(s.client_id));
@@ -788,8 +788,8 @@ async function renderDashboard() {
   const monthTitleEl = document.getElementById('dash-month-title');
   if (monthTitleEl) monthTitleEl.textContent = monthName();
 
-  document.getElementById('traj-received').textContent = '₪' + Math.round(receivedThisMonth);
-  document.getElementById('traj-outstanding').textContent = '₪' + Math.round(outstandingThisMonth);
+  document.getElementById('traj-received').textContent = '₪' + Math.round(earnedThisMonth);
+  document.getElementById('traj-outstanding').textContent = stillToCollect > 0 ? '₪' + Math.round(stillToCollect) : '₪0';
   document.getElementById('traj-projected').textContent = scheduledThisMonth > 0 ? '₪' + Math.round(scheduledThisMonth) : '—';
 
   // Action items: all sessions (not just this month) that need attention
