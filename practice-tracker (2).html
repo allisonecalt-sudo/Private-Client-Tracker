@@ -192,7 +192,7 @@
     white-space: nowrap;
   }
   .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { filter: brightness(0.92); }
+  .btn-primary:hover { background: #a8441400; filter: brightness(0.9); }
   .btn-primary:hover { filter: brightness(0.92); }
   .btn-sm { padding: 0.4rem 0.85rem; font-size: 0.82rem; }
   .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
@@ -674,7 +674,7 @@ function renderSessionsTab() {
 
   el.innerHTML = `<div class="table-wrap"><table>
     <thead><tr>
-      <th>Date</th><th>Client</th><th>Type</th><th>Rate</th><th>Status</th>
+      <th>Date</th><th>Client</th><th>Type</th><th>Rate</th><th>Status</th><th></th>
     </tr></thead>
     <tbody>
       ${list.map(s => {
@@ -685,10 +685,22 @@ function renderSessionsTab() {
           <td>${c ? (c.type === 'cash' ? '<span class="badge badge-cash">Cash</span>' : '<span class="badge badge-vv">VV</span>') : ''}</td>
           <td style="font-family:'DM Mono',monospace">₪${c ? c.rate : '—'}</td>
           <td>${s.paid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Pending</span>'}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteSession('${s.id}')">Delete</button></td>
         </tr>`;
       }).join('')}
     </tbody>
   </table></div>`;
+}
+
+async function deleteSession(id) {
+  if (!confirm('Delete this session?')) return;
+  const { error } = await sbClient.from('sessions').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Session deleted');
+  await loadSessions();
+  renderSessionsTab();
+  renderCashSessionPicker();
+  renderVVSessionPicker();
 }
 
 // ── CLIENTS ─────────────────────────────────────────────
