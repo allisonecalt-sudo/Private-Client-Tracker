@@ -690,7 +690,7 @@ function renderCashNeedsAttention(payments) {
             <label class="toggle"><input type="checkbox" ${p.paid_to_vv?'checked':''} onchange="toggleCashPaidVV('${p.id}',this.checked)"><span class="toggle-slider"></span></label>
             <span style="font-size:0.73rem;color:var(--text-muted)">${p.paid_to_vv?'Paid VV':'Pending'}</span>
           </label>
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteCashPayment('${p.id}',${JSON.stringify(p.session_ids)})">🗑️ Delete</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteCashPayment('${p.id}',JSON.parse(this.dataset.ids))" data-ids="${JSON.stringify(p.session_ids).replace(/"/g,'&quot;')}">🗑️ Delete</button>
           <span class="batch-chevron">▼</span>
         </div>
       </div>
@@ -784,7 +784,7 @@ function renderBankNeedsReceipt(payments) {
             <label class="toggle"><input type="checkbox" ${p.receipt_sent?'checked':''} onchange="toggleVVReceipt('${p.id}',this.checked)"><span class="toggle-slider"></span></label>
             <span style="font-size:0.73rem;color:var(--text-muted)">${p.receipt_sent?'Receipt sent':'No receipt'}</span>
           </label>
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteVVPayment('${p.id}',${JSON.stringify(p.session_ids)})">🗑️ Delete</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteVVPayment('${p.id}',JSON.parse(this.dataset.ids))" data-ids="${JSON.stringify(p.session_ids).replace(/"/g,'&quot;')}">🗑️ Delete</button>
           <span class="batch-chevron">▼</span>
         </div>
       </div>
