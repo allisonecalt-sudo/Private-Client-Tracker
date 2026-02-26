@@ -1,390 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Practice Tracker</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Practice Tracker (Ultimate)</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f5f4f0;
-  --surface: #ffffff;
-  --surface2: #f0efeb;
-  --surface3: #e8e7e2;
-  --border: #dddbd4;
-  --text: #1a1915;
-  --text-muted: #6b6960;
-  --text-dim: #a09e96;
-  --accent: #2d6a4f;
-  --accent-bright: #40916c;
-  --accent-soft: rgba(45,106,79,0.10);
-  --accent-glow: rgba(45,106,79,0.18);
-  --green: #2d6a4f;
-  --green-soft: rgba(45,106,79,0.12);
-  --amber: #b5621a;
-  --amber-soft: rgba(181,98,26,0.12);
-  --red: #c0392b;
-  --red-soft: rgba(192,57,43,0.12);
-  --blue: #1d5c8a;
-  --blue-soft: rgba(29,92,138,0.12);
-  --shadow: 0 2px 8px rgba(26,25,21,0.08);
-  --shadow-lg: 0 8px 32px rgba(26,25,21,0.12);
-  --radius: 10px;
-  --radius-lg: 16px;
+:root{
+  --bg:#f5f4f0; --surface:#fff; --surface2:#f0efeb; --surface3:#e8e7e2;
+  --border:#dddbd4; --text:#1a1915; --text-muted:#6b6960; --text-dim:#a09e96;
+  --accent:#2d6a4f; --accent-bright:#40916c; --accent-soft:rgba(45,106,79,0.10);
+  --accent-glow:rgba(45,106,79,0.18); --green:#2d6a4f; --green-soft:rgba(45,106,79,0.12);
+  --amber:#b5621a; --amber-soft:rgba(181,98,26,0.12);
+  --red:#c0392b; --red-soft:rgba(192,57,43,0.12);
+  --blue:#1d5c8a; --blue-soft:rgba(29,92,138,0.12);
+  --shadow:0 2px 8px rgba(26,25,21,0.08); --shadow-lg:0 8px 32px rgba(26,25,21,0.12);
+  --radius:10px; --radius-lg:16px;
 }
-[data-theme="dark"] {
-  --bg: #0f0f0d;
-  --surface: #1a1916;
-  --surface2: #222220;
-  --surface3: #2a2a27;
-  --border: #333330;
-  --text: #f0ede6;
-  --text-muted: #7a7870;
-  --text-dim: #4a4845;
-  --accent: #52b788;
-  --accent-bright: #74c69d;
-  --accent-soft: rgba(82,183,136,0.12);
-  --accent-glow: rgba(82,183,136,0.22);
-  --green: #52b788;
-  --green-soft: rgba(82,183,136,0.12);
-  --amber: #f4a261;
-  --amber-soft: rgba(244,162,97,0.12);
-  --red: #e76f51;
-  --red-soft: rgba(231,111,81,0.12);
-  --blue: #74b3ce;
-  --blue-soft: rgba(116,179,206,0.12);
-  --shadow: 0 2px 8px rgba(0,0,0,0.3);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+[data-theme="dark"]{
+  --bg:#0f0f0d; --surface:#1a1916; --surface2:#222220; --surface3:#2a2a27;
+  --border:#333330; --text:#f0ede6; --text-muted:#7a7870; --text-dim:#4a4845;
+  --accent:#52b788; --accent-bright:#74c69d; --accent-soft:rgba(82,183,136,0.12);
+  --accent-glow:rgba(82,183,136,0.22); --green:#52b788; --green-soft:rgba(82,183,136,0.12);
+  --amber:#f4a261; --amber-soft:rgba(244,162,97,0.12);
+  --red:#e76f51; --red-soft:rgba(231,111,81,0.12);
+  --blue:#74b3ce; --blue-soft:rgba(116,179,206,0.12);
+  --shadow:0 2px 8px rgba(0,0,0,0.35); --shadow-lg:0 8px 32px rgba(0,0,0,0.55);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  font-size: 14px;
-  -webkit-font-smoothing: antialiased;
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:'DM Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh; font-size:14px;
+  -webkit-font-smoothing:antialiased;
 }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar{ width:4px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:var(--border); border-radius:2px; }
+a{ color:var(--accent); text-decoration:none; cursor:pointer; }
 
-/* CONFIG */
-#config-screen {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; padding: 2rem;
-  background: var(--bg);
+#config-screen{
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:2rem; background:var(--bg);
 }
-.config-box {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 2.5rem;
-  max-width: 420px; width: 100%;
-  box-shadow: var(--shadow-lg);
+.config-box{
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:2.2rem;
+  max-width:460px; width:100%; box-shadow:var(--shadow-lg);
 }
-.config-logo {
-  width: 48px; height: 48px; background: var(--accent-soft);
-  border: 1px solid var(--accent); border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; margin-bottom: 1.25rem;
+.config-logo{
+  width:48px; height:48px; background:var(--accent-soft); border:1px solid var(--accent);
+  border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; margin-bottom:1.1rem;
 }
-.config-box h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.35rem; }
-.config-box > p { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.875rem; line-height: 1.6; }
-.config-box label {
-  display: block; font-size: 0.72rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--text-muted); margin-bottom: 0.4rem;
+.config-box h1{ font-size:1.5rem; font-weight:800; margin-bottom:0.35rem; }
+.config-box p{ color:var(--text-muted); margin-bottom:1.3rem; font-size:0.9rem; line-height:1.55; }
+.config-box label{
+  display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.35rem;
 }
-.config-box input {
-  width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--border);
-  border-radius: var(--radius); font-family: 'DM Mono', monospace; font-size: 0.78rem;
-  background: var(--surface2); color: var(--text); margin-bottom: 1rem;
-  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+.config-box input{
+  width:100%; padding:0.7rem 0.9rem; border:1px solid var(--border);
+  border-radius:var(--radius); font-family:'DM Mono', monospace; font-size:0.78rem;
+  background:var(--surface2); color:var(--text); margin-bottom:0.9rem;
+  outline:none; transition:border-color 0.2s, box-shadow 0.2s;
 }
-.config-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.config-box input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
 
-/* LAYOUT */
-#app { display: none; padding-bottom: 80px; }
-.app-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0.8rem 1.5rem;
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: var(--shadow);
+#app{ display:none; padding-bottom:80px; }
+.app-header{
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:0.8rem 1.25rem; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100; box-shadow:var(--shadow);
 }
-.header-left { display: flex; align-items: center; gap: 1.25rem; }
-.app-header h1 { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
-.header-tabs { display: flex; gap: 0.15rem; }
-.header-tab-btn {
-  padding: 0.4rem 0.85rem; border: none; background: none; cursor: pointer;
-  border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
-  font-weight: 500; color: var(--text-muted); transition: all 0.15s;
+.header-left{ display:flex; align-items:center; gap:1.15rem; }
+.app-header h1{ font-size:1rem; font-weight:800; letter-spacing:-0.01em; }
+.header-tabs{ display:flex; gap:0.15rem; flex-wrap:wrap; }
+.header-tab-btn{
+  padding:0.42rem 0.85rem; border:none; background:none; cursor:pointer;
+  border-radius:10px; font-size:0.82rem; font-weight:600; color:var(--text-muted);
+  transition:all 0.15s;
 }
-.header-tab-btn:hover { background: var(--surface2); color: var(--text); }
-.header-tab-btn.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.header-tab-btn:hover{ background:var(--surface2); color:var(--text); }
+.header-tab-btn.active{ background:var(--accent-soft); color:var(--accent); }
 
-/* BOTTOM NAV */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 0.4rem 0.25rem calc(0.4rem + env(safe-area-inset-bottom));
-  z-index: 200; display: none;
-  grid-template-columns: repeat(6, 1fr); gap: 0.15rem;
+.bottom-nav{
+  position:fixed; bottom:0; left:0; right:0;
+  background:var(--surface); border-top:1px solid var(--border);
+  padding:0.4rem 0.25rem calc(0.4rem + env(safe-area-inset-bottom));
+  z-index:200; display:none; grid-template-columns:repeat(6,1fr); gap:0.15rem;
 }
-.bottom-nav-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
-  padding: 0.45rem 0.15rem; border: none; background: none; cursor: pointer;
-  border-radius: 8px; color: var(--text-muted);
-  font-family: 'DM Sans', sans-serif; font-size: 0.6rem; font-weight: 500;
-  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+.bottom-nav-btn{
+  display:flex; flex-direction:column; align-items:center; gap:0.2rem;
+  padding:0.45rem 0.15rem; border:none; background:none; cursor:pointer;
+  border-radius:10px; color:var(--text-muted); font-size:0.62rem; font-weight:700;
+  transition:all 0.15s; -webkit-tap-highlight-color:transparent;
 }
-.bottom-nav-btn .nav-icon { font-size: 1.05rem; line-height: 1; }
-.bottom-nav-btn.active { color: var(--accent); background: var(--accent-soft); }
-.bottom-nav-btn:active { transform: scale(0.92); }
+.bottom-nav-btn .nav-icon{ font-size:1.05rem; line-height:1; }
+.bottom-nav-btn.active{ color:var(--accent); background:var(--accent-soft); }
+.bottom-nav-btn:active{ transform:scale(0.92); }
 
-.main { padding: 1.5rem; max-width: 900px; margin: 0 auto; }
-.tab-content { display: none; }
-.tab-content.active { display: block; animation: fadeIn 0.18s ease; }
+.main{ padding:1.25rem; max-width:980px; margin:0 auto; }
+.tab-content{ display:none; }
+.tab-content.active{ display:block; animation:fadeIn 0.18s ease; }
 
-/* CARDS */
-.card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem;
-  box-shadow: var(--shadow);
+.card{
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1rem;
+  box-shadow:var(--shadow);
 }
-.card-title {
-  font-size: 0.72rem; font-weight: 600; margin-bottom: 1rem;
-  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;
+.card-title{
+  font-size:0.72rem; font-weight:800; margin-bottom:0.9rem;
+  color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em;
 }
+.banner{
+  border:1px solid var(--border); border-radius:var(--radius-lg);
+  background:var(--surface2); padding:0.9rem 1rem; margin-bottom:1rem;
+  display:none;
+}
+.banner.error{ border-color:rgba(192,57,43,0.35); background:var(--red-soft); }
+.banner.warn{ border-color:rgba(181,98,26,0.35); background:var(--amber-soft); }
+.banner strong{ font-weight:900; }
 
-/* DASHBOARD STATS */
-.stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem; margin-bottom: 1rem;
-}
-.stat-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 1.25rem;
-  box-shadow: var(--shadow); position: relative; overflow: hidden;
-}
-.stat-card::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-}
-.stat-card.green::after { background: var(--green); }
-.stat-card.amber::after { background: var(--amber); }
-.stat-card.blue::after { background: var(--blue); }
-.stat-card.red::after { background: var(--red); }
-.stat-label { font-size: 0.67rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.5rem; }
-.stat-value { font-family: 'DM Mono', monospace; font-size: 1.45rem; font-weight: 500; line-height: 1; }
-.stat-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.4rem; }
-.stat-icon { position: absolute; top: 1rem; right: 1rem; font-size: 1.1rem; opacity: 0.3; }
+.section-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; gap:0.75rem; flex-wrap:wrap; }
+.section-header h2{ font-size:1.25rem; font-weight:900; letter-spacing:-0.01em; }
 
-/* MONTH TRAJECTORY */
-.trajectory-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 0.75rem;
-  box-shadow: var(--shadow);
+.form-row{ display:flex; gap:0.75rem; flex-wrap:wrap; align-items:flex-end; }
+.form-group{ display:flex; flex-direction:column; gap:0.35rem; flex:1; min-width:160px; }
+.form-group label{
+  font-size:0.7rem; font-weight:800; text-transform:uppercase;
+  letter-spacing:0.07em; color:var(--text-muted);
 }
-.trajectory-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.trajectory-header h3 { font-size: 0.88rem; font-weight: 600; }
-.traj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-.traj-item { text-align: center; padding: 0.75rem; background: var(--surface2); border-radius: var(--radius); }
-.traj-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.35rem; }
-.traj-val { font-family: 'DM Mono', monospace; font-size: 1.15rem; font-weight: 500; }
+select, input[type="date"], input[type="text"], input[type="number"]{
+  padding:0.6rem 0.85rem; border:1px solid var(--border); border-radius:var(--radius);
+  font-family:'DM Sans', sans-serif; font-size:0.9rem;
+  background:var(--surface2); color:var(--text); outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s; width:100%; -webkit-appearance:none;
+}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6960' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 0.85rem center; padding-right:2.2rem;
+}
+select:focus, input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
 
-/* PENDING */
-.pending-items { display: flex; flex-direction: column; gap: 0.5rem; }
-.pending-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.75rem 1rem; background: var(--surface2); border-radius: var(--radius);
-  font-size: 0.84rem; border: 1px solid var(--border); transition: background 0.15s;
+.btn{
+  padding:0.6rem 1.15rem; border:none; border-radius:var(--radius); cursor:pointer;
+  font-weight:900; font-size:0.85rem; transition:all 0.15s; white-space:nowrap;
+  display:inline-flex; align-items:center; gap:0.35rem;
 }
-.pending-item:hover { background: var(--surface3); }
-.pending-item .pi-left { display: flex; align-items: center; gap: 0.6rem; }
-.pending-item .pi-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.btn:active{ transform:scale(0.97); }
+.btn-primary{ background:var(--accent); color:#fff; }
+.btn-primary:hover{ background:var(--accent-bright); box-shadow:0 3px 12px var(--accent-glow); }
+.btn-outline{ background:transparent; border:1px solid var(--border); color:var(--text-muted); }
+.btn-outline:hover{ border-color:var(--accent); color:var(--accent); }
+.btn-ghost{ background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); }
+.btn-ghost:hover{ background:var(--surface3); color:var(--text); }
+.btn-sm{ padding:0.35rem 0.75rem; font-size:0.75rem; border-radius:9px; }
+.btn-icon{
+  background:none; border:none; cursor:pointer; padding:0.35rem 0.5rem;
+  border-radius:8px; font-size:1rem; color:var(--text-muted); transition:all 0.15s;
+}
+.btn-icon:hover{ background:var(--red-soft); color:var(--red); }
 
-/* FORMS */
-.form-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
-.form-group { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; min-width: 130px; }
-.form-group label {
-  font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.07em; color: var(--text-muted);
+.table-wrap{ overflow-x:auto; }
+table{ width:100%; border-collapse:collapse; font-size:0.86rem; }
+th{
+  text-align:left; padding:0.55rem 0.85rem; font-size:0.66rem; font-weight:900;
+  text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim);
+  border-bottom:1px solid var(--border); background:var(--surface2);
 }
-select, input[type="date"], input[type="text"], input[type="number"] {
-  padding: 0.6rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius);
-  font-family: 'DM Sans', sans-serif; font-size: 0.875rem;
-  background: var(--surface2); color: var(--text); outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s; width: 100%; -webkit-appearance: none;
-}
-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6960' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.2rem;
-}
-select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-select option { background: var(--surface2); }
+td{ padding:0.75rem 0.85rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+tbody tr:hover td{ background:var(--surface2); }
+tr:last-child td{ border-bottom:none; }
 
-/* BUTTONS */
-.btn {
-  padding: 0.6rem 1.15rem; border: none; border-radius: var(--radius); cursor: pointer;
-  font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.84rem;
-  transition: all 0.15s; white-space: nowrap;
-  display: inline-flex; align-items: center; gap: 0.35rem;
+.badge{
+  display:inline-flex; align-items:center; gap:0.2rem;
+  padding:0.18rem 0.6rem; border-radius:999px;
+  font-size:0.69rem; font-weight:900; white-space:nowrap;
 }
-.btn:active { transform: scale(0.96); }
-.btn-primary { background: var(--accent); color: white; }
-.btn-primary:hover { background: var(--accent-bright); box-shadow: 0 3px 12px var(--accent-glow); }
-.btn-sm { padding: 0.32rem 0.7rem; font-size: 0.74rem; border-radius: 7px; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-.btn-danger { background: var(--red-soft); color: var(--red); }
-.btn-danger:hover { background: rgba(192,57,43,0.2); }
-.btn-ghost { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
-.btn-ghost:hover { background: var(--surface3); color: var(--text); }
-.btn-icon { background: none; border: none; cursor: pointer; padding: 0.3rem 0.4rem; border-radius: 6px; font-size: 1rem; line-height: 1; color: var(--text-muted); transition: all 0.15s; }
-.btn-icon:hover { background: var(--red-soft); color: var(--red); }
+.badge-green{ background:var(--green-soft); color:var(--green); }
+.badge-amber{ background:var(--amber-soft); color:var(--amber); }
+.badge-red{ background:var(--red-soft); color:var(--red); }
+.badge-cash{ background:var(--blue-soft); color:var(--blue); }
+.badge-bank{ background:var(--accent-soft); color:var(--accent); }
+.badge-scheduled{ background:var(--surface3); color:var(--text-dim); border:1px dashed var(--border); }
 
-/* TABLES */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-th {
-  text-align: left; padding: 0.55rem 0.85rem; font-size: 0.65rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim);
-  border-bottom: 1px solid var(--border); background: var(--surface2);
+.toggle-wrap{ display:flex; align-items:center; gap:0.5rem; }
+.toggle{ position:relative; width:36px; height:18px; cursor:pointer; flex-shrink:0; }
+.toggle input{ opacity:0; width:0; height:0; }
+.toggle-slider{ position:absolute; inset:0; background:var(--border); border-radius:999px; transition:0.2s; }
+.toggle-slider::before{
+  content:''; position:absolute; width:12px; height:12px; left:3px; top:3px;
+  background:#fff; border-radius:50%; transition:0.2s;
 }
-th:first-child { border-radius: 6px 0 0 0; }
-th:last-child { border-radius: 0 6px 0 0; }
-td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tbody tr { transition: background 0.1s; }
-tbody tr:hover td { background: var(--surface2); }
+.toggle input:checked + .toggle-slider{ background:var(--green); }
+.toggle input:checked + .toggle-slider::before{ transform:translateX(18px); }
 
-/* BADGES */
-.badge {
-  display: inline-flex; align-items: center; gap: 0.2rem;
-  padding: 0.18rem 0.55rem; border-radius: 20px;
-  font-size: 0.68rem; font-weight: 600; white-space: nowrap;
+.stats3{ display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; }
+.stat{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:1.1rem 1.15rem; box-shadow:var(--shadow); position:relative; overflow:hidden;
 }
-.badge-green { background: var(--green-soft); color: var(--green); }
-.badge-amber { background: var(--amber-soft); color: var(--amber); }
-.badge-cash { background: var(--blue-soft); color: var(--blue); }
-.badge-bank { background: var(--accent-soft); color: var(--accent); }
-.badge-scheduled { background: var(--surface3); color: var(--text-dim); border: 1px dashed var(--border); }
-.btn-confirm { background: var(--green-soft); color: var(--green); border: 1px solid rgba(45,106,79,0.25); }
-.btn-confirm:hover { background: rgba(45,106,79,0.2); }
+.stat::after{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--border); }
+.stat.green::after{ background:var(--green); }
+.stat.amber::after{ background:var(--amber); }
+.stat.dim::after{ background:var(--border); }
+.stat .label{ font-size:0.66rem; font-weight:900; text-transform:uppercase; letter-spacing:0.09em; color:var(--text-muted); margin-bottom:0.5rem; }
+.stat .value{ font-family:'DM Mono', monospace; font-size:1.65rem; font-weight:500; line-height:1; }
+.stat .sub{ font-size:0.7rem; color:var(--text-dim); margin-top:0.45rem; }
 
-/* TOGGLE */
-.toggle-wrap { display: flex; align-items: center; gap: 0.5rem; }
-.toggle { position: relative; width: 34px; height: 18px; cursor: pointer; flex-shrink: 0; }
-.toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 20px; transition: 0.2s; }
-.toggle-slider::before {
-  content: ''; position: absolute; width: 12px; height: 12px; left: 3px; top: 3px;
-  background: white; border-radius: 50%; transition: 0.2s;
+.month-nav{
+  display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;
 }
-.toggle input:checked + .toggle-slider { background: var(--green); }
-.toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
-
-/* SESSION PICKER */
-.session-picker {
-  display: flex; flex-direction: column; gap: 0.35rem;
-  max-height: 240px; overflow-y: auto; padding: 0.5rem;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius); margin-bottom: 0.75rem;
+.month-nav .title{
+  font-size:1.25rem; font-weight:900; letter-spacing:-0.01em;
 }
-.session-check-item {
-  display: flex; align-items: center; gap: 0.65rem;
-  padding: 0.55rem 0.7rem; background: var(--surface);
-  border: 1px solid var(--border); border-radius: 7px; cursor: pointer;
-  transition: border-color 0.15s, background 0.15s; -webkit-tap-highlight-color: transparent;
+.month-nav .controls{ display:flex; gap:0.5rem; align-items:center; }
+.pill{
+  padding:0.35rem 0.75rem; border:1px solid var(--border); border-radius:999px;
+  background:var(--surface); cursor:pointer; font-weight:900; font-size:0.78rem; color:var(--text-muted);
 }
-.session-check-item:hover { border-color: var(--accent); }
-.session-check-item.selected { border-color: var(--accent); background: var(--accent-soft); }
-.session-check-item input[type="checkbox"] {
-  accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0;
-  min-width: unset; padding: 0; border: none; background: none;
+.pill:hover{ border-color:var(--accent); color:var(--accent); }
+
+.session-picker{
+  display:flex; flex-direction:column; gap:0.35rem;
+  max-height:260px; overflow:auto; padding:0.5rem;
+  background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+  margin-bottom:0.75rem;
 }
-
-/* SUMMARY BOX */
-.summary-box {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 0.9rem 1.1rem;
-  display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+.session-check-item{
+  display:flex; align-items:center; gap:0.65rem;
+  padding:0.55rem 0.7rem; background:var(--surface);
+  border:1px solid var(--border); border-radius:10px; cursor:pointer;
+  transition:border-color 0.15s, background 0.15s;
 }
-.summary-box .item { display: flex; flex-direction: column; gap: 0.2rem; }
-.summary-box .item span:first-child { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
-.summary-box .item strong { font-size: 1.05rem; font-family: 'DM Mono', monospace; }
+.session-check-item:hover{ border-color:var(--accent); }
+.session-check-item.selected{ border-color:var(--accent); background:var(--accent-soft); }
+.session-check-item input[type="checkbox"]{ accent-color:var(--accent); width:15px; height:15px; }
 
-/* FILTER / SECTION HEADER */
-.filter-row { display: flex; gap: 0.35rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-.filter-pills { display: flex; gap: 0.35rem; flex-wrap: wrap; }
-.filter-btn {
-  padding: 0.3rem 0.8rem; border: 1px solid var(--border); border-radius: 20px;
-  background: none; cursor: pointer; font-size: 0.76rem; font-family: 'DM Sans', sans-serif;
-  font-weight: 500; color: var(--text-muted); transition: all 0.15s;
+.summary-box{
+  background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+  padding:0.9rem 1.1rem; display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1rem;
 }
-.filter-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-.section-header h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; }
-.section-divider {
-  display: flex; align-items: center; gap: 0.75rem; margin: 1.5rem 0 0.75rem;
+.summary-box .item{ display:flex; flex-direction:column; gap:0.2rem; }
+.summary-box .item span{ font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.07em; font-weight:900; }
+.summary-box .item strong{ font-size:1.05rem; font-family:'DM Mono', monospace; font-weight:500; }
+
+.filter-row{ display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.85rem; }
+.filter-pills{ display:flex; gap:0.35rem; flex-wrap:wrap; }
+.filter-btn{
+  padding:0.32rem 0.85rem; border:1px solid var(--border); border-radius:999px;
+  background:none; cursor:pointer; font-size:0.78rem; font-weight:900; color:var(--text-muted);
+  transition:all 0.15s;
 }
-.section-divider span { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); white-space: nowrap; }
-.section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.filter-btn.active{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
 
-/* EMPTY STATE */
-.empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.84rem; line-height: 1.6; }
-.empty-state .icon { font-size: 1.8rem; margin-bottom: 0.6rem; opacity: 0.5; }
-.empty-state .action-hint { margin-top: 0.6rem; font-size: 0.76rem; color: var(--text-dim); }
-.empty-state .action-hint a { color: var(--accent); cursor: pointer; font-weight: 500; }
-
-/* SKELETON */
-.skeleton {
-  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
-  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius);
+.empty-state{
+  text-align:center; padding:1.8rem 1rem; color:var(--text-muted);
+  font-size:0.88rem; line-height:1.6;
 }
-.skeleton-row { height: 44px; margin-bottom: 0.5rem; }
+.empty-state .icon{ font-size:1.8rem; margin-bottom:0.55rem; opacity:0.55; }
+.small-note{ font-size:0.76rem; color:var(--text-dim); line-height:1.5; }
 
-/* BATCH ROW EXPAND */
-.batch-sessions { display: none; }
-.batch-sessions.open { display: block; }
-.batch-detail-row td { background: var(--surface2); padding: 0; }
-.batch-detail-inner { padding: 0.5rem 0.85rem 0.75rem; display: flex; flex-direction: column; gap: 0.3rem; }
-.batch-session-line { display: flex; align-items: center; gap: 0.75rem; font-size: 0.78rem; color: var(--text-muted); padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
-.batch-session-line:last-child { border-bottom: none; }
-.batch-session-line strong { color: var(--text); }
-
-/* TOAST */
-.toast {
-  position: fixed; bottom: 90px; left: 50%;
-  transform: translateX(-50%) translateY(12px);
-  background: var(--surface); border: 1px solid var(--border); color: var(--text);
-  padding: 0.6rem 1.1rem; border-radius: 30px; font-size: 0.84rem; font-weight: 500;
-  box-shadow: var(--shadow-lg); z-index: 9999; opacity: 0;
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; white-space: nowrap;
+.toast{
+  position:fixed; bottom:92px; left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:var(--surface); border:1px solid var(--border); color:var(--text);
+  padding:0.6rem 1.1rem; border-radius:999px; font-size:0.86rem; font-weight:800;
+  box-shadow:var(--shadow-lg); z-index:9999; opacity:0;
+  transition:all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events:none; white-space:nowrap;
 }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.success { border-color: rgba(45,106,79,0.4); color: var(--green); }
-.toast.error { border-color: rgba(192,57,43,0.4); color: var(--red); }
-.toast.clickable { pointer-events: auto; cursor: pointer; }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.success{ border-color:rgba(45,106,79,0.4); color:var(--green); }
+.toast.error{ border-color:rgba(192,57,43,0.4); color:var(--red); }
+.toast.warn{ border-color:rgba(181,98,26,0.45); color:var(--amber); }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-@media (min-width: 601px) { .bottom-nav { display: none !important; } #app { padding-bottom: 0; } }
-@media (max-width: 600px) {
-  .header-tabs { display: none; }
-  .bottom-nav { display: grid !important; }
-  .app-header { padding: 0.7rem 1rem; }
-  .main { padding: 1rem; }
-  .form-row { flex-direction: column; }
-  .form-group { min-width: 100%; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .traj-grid { grid-template-columns: repeat(3, 1fr); }
-  .stat-value { font-size: 1.2rem; }
-  .toast { bottom: 85px; }
+@keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+@media (min-width: 701px){ .bottom-nav{ display:none !important; } #app{ padding-bottom:0; } }
+@media (max-width: 700px){
+  .header-tabs{ display:none; }
+  .bottom-nav{ display:grid !important; }
+  .main{ padding:1rem; }
+  .stats3{ grid-template-columns:repeat(1,1fr); }
+  .toast{ bottom:86px; }
 }
 </style>
 </head>
@@ -395,13 +295,16 @@ tbody tr:hover td { background: var(--surface2); }
   <div class="config-box">
     <div class="config-logo">📋</div>
     <h1>Practice Tracker</h1>
-    <p>Enter your Supabase credentials to connect. Saved in your browser — one time only.</p>
+    <p>Connect to Supabase. Credentials are stored locally in your browser.</p>
     <label>Supabase URL</label>
-    <input type="text" id="sb-url" placeholder="https://xxxx.supabase.co">
+    <input type="text" id="sb-url" placeholder="https://xxxx.supabase.co" />
     <label>Supabase Anon Key</label>
-    <input type="text" id="sb-key" placeholder="eyJ...">
-    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:0.75rem" onclick="initApp()">Connect →</button>
-    <p id="config-error" style="color:var(--red);margin-top:0.75rem;font-size:0.82rem;display:none;text-align:center"></p>
+    <input type="text" id="sb-key" placeholder="eyJ..." />
+    <div class="form-row" style="margin-top:0.25rem">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:0.78rem" onclick="connect()">Connect →</button>
+      <button class="btn btn-outline" style="width:100%;justify-content:center;padding:0.78rem" onclick="clearSaved()">Clear saved</button>
+    </div>
+    <div id="config-error" class="small-note" style="margin-top:0.85rem; display:none"></div>
   </div>
 </div>
 
@@ -411,64 +314,77 @@ tbody tr:hover td { background: var(--surface2); }
     <div class="header-left">
       <h1>📋 Practice Tracker</h1>
       <div class="header-tabs">
-        <button class="header-tab-btn active" onclick="switchTab('home',this)">Home</button>
-        <button class="header-tab-btn" onclick="switchTab('sessions',this)">Sessions</button>
-        <button class="header-tab-btn" onclick="switchTab('clients',this)">Clients</button>
-        <button class="header-tab-btn" onclick="switchTab('cash',this)">Cash</button>
-        <button class="header-tab-btn" onclick="switchTab('bank',this)">Bank Transfer</button>
-        <button class="header-tab-btn" onclick="switchTab('records',this)">Records</button>
+        <button class="header-tab-btn active" data-tab="home" onclick="switchTab('home', this)">Home</button>
+        <button class="header-tab-btn" data-tab="sessions" onclick="switchTab('sessions', this)">Sessions</button>
+        <button class="header-tab-btn" data-tab="clients" onclick="switchTab('clients', this)">Clients</button>
+        <button class="header-tab-btn" data-tab="cash" onclick="switchTab('cash', this)">Cash</button>
+        <button class="header-tab-btn" data-tab="bank" onclick="switchTab('bank', this)">Bank</button>
+        <button class="header-tab-btn" data-tab="records" onclick="switchTab('records', this)">Records</button>
+        <button class="header-tab-btn" data-tab="archive" onclick="switchTab('archive', this)">Archive</button>
       </div>
     </div>
-    <button class="btn btn-outline btn-sm" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; justify-content:flex-end">
+      <button class="btn btn-outline btn-sm" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+      <button class="btn btn-outline btn-sm" onclick="reloadAll()">↻ Refresh</button>
+    </div>
   </div>
 
   <div class="main">
+    <div id="banner" class="banner"></div>
 
     <!-- HOME -->
     <div id="tab-home" class="tab-content active">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem">
-        <h2 style="font-size:1.25rem;font-weight:700;letter-spacing:-0.01em" id="dash-month-title">February 2026</h2>
-        <span id="dash-month" style="display:none"></span>
+      <div class="section-header">
+        <div class="month-nav" style="width:100%">
+          <div>
+            <div class="small-note" style="margin-bottom:0.15rem">Month view</div>
+            <div class="title" id="home-month-title">—</div>
+          </div>
+          <div class="controls">
+            <button class="pill" onclick="changeMonth(-1)">← Prev</button>
+            <button class="pill" onclick="goToThisMonth()">This month</button>
+            <button class="pill" onclick="changeMonth(1)">Next →</button>
+          </div>
+        </div>
       </div>
 
-      <!-- The only 3 numbers that matter -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem">
-
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.25rem 1rem;box-shadow:var(--shadow);border-top:3px solid var(--green)">
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">Earned this month</div>
-          <div style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:500;line-height:1" id="traj-received">₪—</div>
-          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">sessions that happened</div>
+      <div class="stats3" style="margin-bottom:1rem">
+        <div class="stat green">
+          <div class="label">Earned (happened) in month</div>
+          <div class="value" id="home-earned">₪—</div>
+          <div class="sub">Money is yours once session happened (paid or not)</div>
         </div>
-
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.25rem 1rem;box-shadow:var(--shadow);border-top:3px solid var(--amber)">
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">Still to collect</div>
-          <div style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:500;line-height:1" id="traj-outstanding">₪—</div>
-          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">yours, just not received yet</div>
+        <div class="stat amber">
+          <div class="label">Still to collect (all time)</div>
+          <div class="value" id="home-collect">₪—</div>
+          <div class="sub">Happened but not received yet</div>
         </div>
-
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.25rem 1rem;box-shadow:var(--shadow);border-top:3px solid var(--border)">
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.5rem">If scheduled happen</div>
-          <div style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:500;line-height:1;color:var(--text-muted)" id="traj-projected">—</div>
-          <div style="font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem">potential extra this month</div>
+        <div class="stat dim">
+          <div class="label">Projected (scheduled) in month</div>
+          <div class="value" id="home-projected">—</div>
+          <div class="sub">If scheduled sessions happen</div>
         </div>
-
       </div>
 
-      <!-- Action items only — no repeated stats -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;box-shadow:var(--shadow)">
-        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.85rem">To do</div>
-        <div id="pending-actions">
-          <div class="skeleton skeleton-row"></div>
-          <div class="skeleton skeleton-row"></div>
+      <div class="card">
+        <div class="card-title">To do</div>
+        <div id="home-actions">
+          <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Highs</div>
+        <div id="home-highs" class="small-note">—</div>
       </div>
     </div>
 
     <!-- SESSIONS -->
     <div id="tab-sessions" class="tab-content">
       <div class="section-header"><h2>Sessions</h2></div>
+
       <div class="card">
-        <div class="card-title">Log a Session</div>
+        <div class="card-title">Log a session</div>
         <div class="form-row">
           <div class="form-group">
             <label>Client</label>
@@ -476,9 +392,9 @@ tbody tr:hover td { background: var(--surface2); }
           </div>
           <div class="form-group">
             <label>Date</label>
-            <input type="date" id="session-date">
+            <input type="date" id="session-date" />
           </div>
-          <div class="form-group" style="flex:0;min-width:150px">
+          <div class="form-group" style="flex:0; min-width:170px">
             <label>Status</label>
             <select id="session-status">
               <option value="happened">✓ Happened</option>
@@ -487,108 +403,119 @@ tbody tr:hover td { background: var(--surface2); }
           </div>
           <button class="btn btn-primary" id="add-session-btn" onclick="addSession()">+ Add</button>
         </div>
-        <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.5rem">Tip: press Enter to quickly add</div>
+        <div class="small-note" style="margin-top:0.55rem">Tip: press Enter while on this tab to add quickly.</div>
       </div>
+
       <div class="filter-row">
         <div class="filter-pills">
-          <button class="filter-btn active" onclick="filterSessions('all',this)">All</button>
-          <button class="filter-btn" onclick="filterSessions('happened',this)">Happened</button>
-          <button class="filter-btn" onclick="filterSessions('scheduled',this)">Scheduled</button>
-          <button class="filter-btn" onclick="filterSessions('paid',this)">Paid</button>
+          <button class="filter-btn active" onclick="setSessionFilter('all', this)">All</button>
+          <button class="filter-btn" onclick="setSessionFilter('happened', this)">Happened</button>
+          <button class="filter-btn" onclick="setSessionFilter('scheduled', this)">Scheduled</button>
+          <button class="filter-btn" onclick="setSessionFilter('paid', this)">Paid</button>
+          <button class="filter-btn" onclick="setSessionFilter('unpaid', this)">Unpaid happened</button>
         </div>
-        <span style="font-size:0.72rem;color:var(--text-dim)">Click column headers to sort</span>
+        <div class="small-note">Click headers to sort.</div>
       </div>
+
       <div id="sessions-list" class="card">
-        <div class="skeleton skeleton-row"></div>
-        <div class="skeleton skeleton-row"></div>
-        <div class="skeleton skeleton-row"></div>
+        <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
       </div>
     </div>
 
     <!-- CLIENTS -->
     <div id="tab-clients" class="tab-content">
       <div class="section-header"><h2>Clients</h2></div>
+
       <div class="card">
-        <div class="card-title">Add Client</div>
+        <div class="card-title">Add client</div>
         <div class="form-row">
           <div class="form-group">
             <label>Name</label>
-            <input type="text" id="client-name" placeholder="e.g. Miki">
+            <input type="text" id="client-name" placeholder="e.g. Miki" />
           </div>
-          <div class="form-group">
-            <label>Payment Type</label>
+          <div class="form-group" style="flex:0; min-width:170px">
+            <label>Payment type</label>
             <select id="client-type">
               <option value="cash">Cash</option>
-              <option value="bank">Bank Transfer</option>
+              <option value="bank">Bank transfer</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="flex:0; min-width:170px">
             <label>Rate (₪)</label>
-            <input type="number" id="client-rate" placeholder="420">
+            <input type="number" id="client-rate" placeholder="420" />
           </div>
           <button class="btn btn-primary" onclick="addClient()">+ Add</button>
         </div>
       </div>
+
       <div id="clients-list" class="card">
-        <div class="skeleton skeleton-row"></div>
+        <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
       </div>
     </div>
 
     <!-- CASH -->
     <div id="tab-cash" class="tab-content">
-      <div class="section-header"><h2>Cash Payments</h2></div>
+      <div class="section-header">
+        <h2>Cash</h2>
+        <div class="small-note">Batch cash collections. You keep 85% — VV gets 15%.</div>
+      </div>
 
-      <div class="section-divider"><span>Waiting for payment</span></div>
       <div class="card">
-        <div class="card-title">Record Cash Received</div>
-        <p style="font-size:0.81rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.5">Select sessions where you collected cash. You keep 85% — VV gets 15%.</p>
-        <div id="cash-session-picker"><div class="skeleton skeleton-row"></div></div>
+        <div class="card-title">Record cash received</div>
+        <div id="cash-session-picker"></div>
         <div class="summary-box" id="cash-summary" style="display:none">
           <div class="item"><span>Sessions</span><strong id="cash-count">0</strong></div>
-          <div class="item"><span>You Keep (85%)</span><strong id="cash-total" style="color:var(--green)">₪0</strong></div>
-          <div class="item"><span>VV's 15%</span><strong id="cash-vv-owed" style="color:var(--amber)">₪0</strong></div>
+          <div class="item"><span>You keep (85%)</span><strong id="cash-youkeep" style="color:var(--green)">₪0</strong></div>
+          <div class="item"><span>VV owed (15%)</span><strong id="cash-vvowed" style="color:var(--amber)">₪0</strong></div>
         </div>
+
         <div class="form-row">
-          <div class="form-group">
-            <label>Date Received</label>
-            <input type="date" id="cash-payment-date">
+          <div class="form-group" style="flex:0; min-width:220px">
+            <label>Date received</label>
+            <input type="date" id="cash-payment-date" />
           </div>
-          <button class="btn btn-primary" onclick="recordCashPayment()">Record Payment</button>
+          <button class="btn btn-primary" onclick="recordCashPayment()">Record payment</button>
         </div>
       </div>
 
-      <div class="section-divider"><span>Needs attention — VV payment due</span></div>
-      <div id="cash-needs-attention" class="card">
-        <div class="skeleton skeleton-row"></div>
+      <div class="card">
+        <div class="card-title">Needs attention — pay VV</div>
+        <div id="cash-needs-attention">
+          <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
+        </div>
       </div>
     </div>
 
-    <!-- BANK TRANSFER -->
+    <!-- BANK -->
     <div id="tab-bank" class="tab-content">
-      <div class="section-header"><h2>Bank Transfer</h2></div>
+      <div class="section-header">
+        <h2>Bank (VV transfers)</h2>
+        <div class="small-note">One VV transfer can include multiple sessions / clients.</div>
+      </div>
 
-      <div class="section-divider"><span>Waiting for VV payment</span></div>
       <div class="card">
-        <div class="card-title">Record Bank Transfer Received</div>
-        <p style="font-size:0.81rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.5">Select sessions where VV sent payment. Multiple clients can come in one transfer.</p>
-        <div id="vv-session-picker"><div class="skeleton skeleton-row"></div></div>
+        <div class="card-title">Record bank transfer received</div>
+        <div id="vv-session-picker"></div>
         <div class="summary-box" id="vv-summary" style="display:none">
           <div class="item"><span>Sessions</span><strong id="vv-count">0</strong></div>
-          <div class="item"><span>Full Rate</span><strong id="vv-total">₪0</strong></div>
-          <div class="item"><span>You Get (85%)</span><strong id="vv-you-get" style="color:var(--green)">₪0</strong></div>
+          <div class="item"><span>Gross</span><strong id="vv-gross">₪0</strong></div>
+          <div class="item"><span>You get (85%)</span><strong id="vv-youget" style="color:var(--green)">₪0</strong></div>
         </div>
+
         <div class="form-row">
-          <div class="form-group">
-            <label>Date Received</label>
-            <input type="date" id="vv-payment-date">
+          <div class="form-group" style="flex:0; min-width:220px">
+            <label>Date received</label>
+            <input type="date" id="vv-payment-date" />
           </div>
-          <button class="btn btn-primary" onclick="recordVVPayment()">Record Payment</button>
+          <button class="btn btn-primary" onclick="recordVVPayment()">Record transfer</button>
         </div>
       </div>
 
-      <div class="section-divider"><span>Needs receipt</span></div>
-      <div id="bank-needs-receipt" class="card">
-        <div class="skeleton skeleton-row"></div>
+      <div class="card">
+        <div class="card-title">Needs receipt</div>
+        <div id="bank-needs-receipt">
+          <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
+        </div>
       </div>
     </div>
 
@@ -596,14 +523,50 @@ tbody tr:hover td { background: var(--surface2); }
     <div id="tab-records" class="tab-content">
       <div class="section-header">
         <h2>Records</h2>
-        <select id="records-view" onchange="renderRecordsTab()" style="max-width:180px">
-          <option value="month">By month</option>
-          <option value="batch">By payment batch</option>
-        </select>
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap">
+          <select id="records-view" style="max-width:220px" onchange="renderRecordsTab()">
+            <option value="month">By month</option>
+            <option value="batch">By payment batch</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="renderRecordsTab()">↻</button>
+        </div>
       </div>
       <div id="records-content">
-        <div class="skeleton skeleton-row"></div>
-        <div class="skeleton skeleton-row"></div>
+        <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
+      </div>
+    </div>
+
+    <!-- ARCHIVE -->
+    <div id="tab-archive" class="tab-content">
+      <div class="section-header">
+        <div class="month-nav" style="width:100%">
+          <div>
+            <div class="small-note" style="margin-bottom:0.15rem">Archive month view</div>
+            <div class="title" id="archive-month-title">—</div>
+          </div>
+          <div class="controls">
+            <button class="pill" onclick="changeArchiveMonth(-1)">← Prev</button>
+            <button class="pill" onclick="goArchiveThisMonth()">This month</button>
+            <button class="pill" onclick="changeArchiveMonth(1)">Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">All sessions (month filter)</div>
+        <div class="small-note" style="margin-bottom:0.75rem">
+          This is your “truth view”: scheduled + happened + paid, for the selected month.
+        </div>
+        <div id="archive-month-table">
+          <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">All sessions (all time)</div>
+        <div id="archive-all-table">
+          <div class="empty-state"><div class="icon">⏳</div>Loading…</div>
+        </div>
       </div>
     </div>
 
@@ -612,22 +575,22 @@ tbody tr:hover td { background: var(--surface2); }
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="bottom-nav-btn active" id="bnav-home" onclick="switchTab('home',this,'bnav')">
+  <button class="bottom-nav-btn active" id="bnav-home" onclick="switchTab('home', this, true)">
     <span class="nav-icon">🏠</span><span>Home</span>
   </button>
-  <button class="bottom-nav-btn" id="bnav-sessions" onclick="switchTab('sessions',this,'bnav')">
+  <button class="bottom-nav-btn" id="bnav-sessions" onclick="switchTab('sessions', this, true)">
     <span class="nav-icon">📋</span><span>Sessions</span>
   </button>
-  <button class="bottom-nav-btn" id="bnav-clients" onclick="switchTab('clients',this,'bnav')">
+  <button class="bottom-nav-btn" id="bnav-clients" onclick="switchTab('clients', this, true)">
     <span class="nav-icon">👤</span><span>Clients</span>
   </button>
-  <button class="bottom-nav-btn" id="bnav-cash" onclick="switchTab('cash',this,'bnav')">
+  <button class="bottom-nav-btn" id="bnav-cash" onclick="switchTab('cash', this, true)">
     <span class="nav-icon">💵</span><span>Cash</span>
   </button>
-  <button class="bottom-nav-btn" id="bnav-bank" onclick="switchTab('bank',this,'bnav')">
+  <button class="bottom-nav-btn" id="bnav-bank" onclick="switchTab('bank', this, true)">
     <span class="nav-icon">🏦</span><span>Bank</span>
   </button>
-  <button class="bottom-nav-btn" id="bnav-records" onclick="switchTab('records',this,'bnav')">
+  <button class="bottom-nav-btn" id="bnav-records" onclick="switchTab('records', this, true)">
     <span class="nav-icon">📁</span><span>Records</span>
   </button>
 </nav>
@@ -635,657 +598,1061 @@ tbody tr:hover td { background: var(--surface2); }
 <div id="toast" class="toast"></div>
 
 <script>
-// ─── Constants ───────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────
+  Ultimate Practice Tracker
+  Schema target (recommended):
+  clients: id, name, type ('cash'|'bank'), rate
+  sessions: id, client_id, date, paid boolean, status ('scheduled'|'happened') [optional but recommended]
+  cash_payments: id, date, session_ids uuid[], total, vv_owed, paid_to_vv boolean
+  vv_payments: id, date, session_ids uuid[], total, you_get, receipt_sent boolean
+────────────────────────────────────────────────────────────── */
+
 const VV_CUT = 0.15;
 const NET = (gross) => Number(gross || 0) * (1 - VV_CUT);
 
-// ─── State ───────────────────────────────────────────────────
-let sbClient, clients = [], sessions = [], currentSessionFilter = 'all';
-let lastDeleted = null, undoTimer = null;
+// State
+let sb = null;
+let clients = [];
+let sessions = [];
+let cashPayments = [];
+let vvPayments = [];
+let sessionFilter = 'all';
+let sessionSortCol = 'date';
+let sessionSortDir = 'desc';
+let viewMonth = new Date();          // Home month
+let archiveMonth = new Date();       // Archive month
 
-// ─── Helpers ─────────────────────────────────────────────────
-function fmtDate(s) {
-  if (!s) return '—';
-  return new Date(s + 'T12:00:00').toLocaleDateString('en-IL', { day: 'numeric', month: 'short', year: 'numeric' });
+// ─── Helpers ───────────────────────────────────────────────
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function ym(d){ return d.toISOString().slice(0,7); }
+function monthTitle(d){
+  return d.toLocaleDateString('en-IL', { month:'long', year:'numeric' });
 }
-function fmtDateShort(s) {
-  if (!s) return '—';
-  return new Date(s + 'T12:00:00').toLocaleDateString('en-IL', { day: 'numeric', month: 'short' });
+function fmtMoney(n){
+  const x = Math.round(Number(n||0));
+  return '₪' + x.toString();
 }
-function fmtMonth(s) {
-  if (!s) return '—';
-  return new Date(s + 'T12:00:00').toLocaleDateString('en-IL', { month: 'long', year: 'numeric' });
+function fmtDate(s){
+  if(!s) return '—';
+  return new Date(s + 'T12:00:00').toLocaleDateString('en-IL', { day:'numeric', month:'short', year:'numeric' });
 }
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-function monthName() { return new Date().toLocaleDateString('en-IL', { month: 'long', year: 'numeric' }); }
-function getMonthStart(date) {
-  const d = date || new Date();
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+function fmtDateShort(s){
+  if(!s) return '—';
+  return new Date(s + 'T12:00:00').toLocaleDateString('en-IL', { day:'numeric', month:'short' });
 }
-function clientName(client_id) {
-  const c = clients.find(c => c.id === client_id);
-  return c ? c.name : '?';
+function toast(msg, type=''){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type||'');
+  el.classList.add('show');
+  setTimeout(()=> el.classList.remove('show'), 3000);
 }
-function clientRate(client_id) {
-  const c = clients.find(c => c.id === client_id);
-  return c ? Number(c.rate) : 0;
+function showBanner(kind, html){
+  const b = document.getElementById('banner');
+  b.className = 'banner ' + (kind || '');
+  b.innerHTML = html;
+  b.style.display = 'block';
 }
-
-// ─── Theme ───────────────────────────────────────────────────
-function applyTheme(theme) {
+function hideBanner(){
+  const b = document.getElementById('banner');
+  b.style.display = 'none';
+  b.innerHTML = '';
+}
+function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('theme', theme);
   const btn = document.getElementById('theme-toggle');
-  if (btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+  if(btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
 }
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'light';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
 }
 
-// ─── Init ─────────────────────────────────────────────────────
-async function initApp() {
+// ─── Schema & compatibility ────────────────────────────────
+function clientById(id){ return clients.find(c=>c.id===id) || null; }
+function clientName(id){ const c = clientById(id); return c ? c.name : '—'; }
+function clientType(id){ const c = clientById(id); return c ? c.type : null; }
+function clientRate(id){ const c = clientById(id); return c ? Number(c.rate||0) : 0; }
+
+// FINAL truth rules:
+// - status is ONLY scheduled vs happened (if missing => happened)
+// - paid boolean overrides (paid session)
+function getSessionState(s){
+  if (s && s.paid) return 'paid';
+  const st = (s && s.status) ? String(s.status) : '';
+  if (st === 'scheduled') return 'scheduled';
+  return 'happened';
+}
+function isHappenedUnpaid(s){ return getSessionState(s)==='happened' && !s.paid; }
+
+function sessionInMonth(s, d){
+  const date = String(s.date||'');
+  if(!date || date.length < 7) return false;
+  return date.slice(0,7) === ym(d);
+}
+
+// ─── Init / Connect ────────────────────────────────────────
+function setConfigError(msg, kind='warn'){
+  const el = document.getElementById('config-error');
+  el.style.display = 'block';
+  el.style.color = kind === 'error' ? 'var(--red)' : 'var(--amber)';
+  el.textContent = msg;
+}
+function clearSaved(){
+  localStorage.removeItem('sb_url');
+  localStorage.removeItem('sb_key');
+  setConfigError('Saved credentials cleared.', 'warn');
+}
+async function connect(){
   const url = document.getElementById('sb-url').value.trim();
   const key = document.getElementById('sb-key').value.trim();
-  if (!url || !key) { showConfigError('Both fields required.'); return; }
-  showConfigError('Connecting…');
-  try {
-    sbClient = window.supabase.createClient(url, key);
-    const { error } = await sbClient.from('clients').select('count', { count: 'exact', head: true });
-    if (error) { showConfigError('Connection failed: ' + error.message); return; }
+  if(!url || !key){ setConfigError('Both fields required.', 'error'); return; }
+  setConfigError('Connecting…', 'warn');
+
+  try{
+    sb = window.supabase.createClient(url, key);
+
+    // Minimal connectivity check
+    const { error } = await sb.from('clients').select('count', { count:'exact', head:true });
+    if(error){
+      setConfigError('Connection failed: ' + error.message, 'error');
+      return;
+    }
+
     localStorage.setItem('sb_url', url);
     localStorage.setItem('sb_key', key);
+
     document.getElementById('config-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    loadAll();
-  } catch(e) { showConfigError('Error: ' + e.message); }
-}
-function showConfigError(msg) {
-  const el = document.getElementById('config-error');
-  el.textContent = msg; el.style.display = 'block';
+
+    await reloadAll();
+    toast('Connected ✓', 'success');
+  }catch(e){
+    setConfigError('Error: ' + e.message, 'error');
+  }
 }
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   applyTheme(localStorage.getItem('theme') || 'light');
-  const url = localStorage.getItem('sb_url'), key = localStorage.getItem('sb_key');
-  if (url && key) {
+
+  const t = todayStr();
+  ['session-date','cash-payment-date','vv-payment-date'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = t;
+  });
+
+  // enter-to-add on Sessions tab
+  document.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Enter') return;
+    const tab = document.getElementById('tab-sessions');
+    if(tab && tab.classList.contains('active')) addSession();
+  });
+
+  // Auto connect if saved creds exist
+  const url = localStorage.getItem('sb_url');
+  const key = localStorage.getItem('sb_key');
+  if(url && key){
     document.getElementById('sb-url').value = url;
     document.getElementById('sb-key').value = key;
-    initApp();
+    await connect();
   }
-  const t = todayStr();
-  ['session-date','cash-payment-date','vv-payment-date'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = t;
-  });
-  document.getElementById('dash-month').textContent = monthName();
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.getElementById('tab-sessions').classList.contains('active')) addSession();
-  });
 });
 
-// ─── Navigation ──────────────────────────────────────────────
-function switchTab(name) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.header-tab-btn').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.bottom-nav-btn').forEach(el => el.classList.remove('active'));
-  const tabEl = document.getElementById('tab-' + name);
-  if (tabEl) tabEl.classList.add('active');
-  document.querySelectorAll('.header-tab-btn').forEach(b => {
-    if (b.getAttribute('onclick')?.includes("'"+name+"'")) b.classList.add('active');
-  });
-  const bnav = document.getElementById('bnav-' + name);
-  if (bnav) bnav.classList.add('active');
-  if (name === 'cash') renderCashSessionPicker();
-  if (name === 'bank') renderVVSessionPicker();
-  if (name === 'home') renderDashboard();
-  if (name === 'records') renderRecordsTab();
+// ─── Navigation ─────────────────────────────────────────────
+function switchTab(name, btn=null, isBottomNav=false){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.header-tab-btn').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-btn').forEach(el=>el.classList.remove('active'));
+
+  const tabEl = document.getElementById('tab-'+name);
+  if(tabEl) tabEl.classList.add('active');
+
+  // highlight header tab
+  const hBtn = document.querySelector(`.header-tab-btn[data-tab="${name}"]`);
+  if(hBtn) hBtn.classList.add('active');
+
+  // highlight bottom nav
+  const bBtn = document.getElementById('bnav-'+name);
+  if(bBtn) bBtn.classList.add('active');
+
+  // render when entering specific tabs
+  if(name === 'home') renderHome();
+  if(name === 'sessions') renderSessionsTab();
+  if(name === 'clients') renderClientsTab();
+  if(name === 'cash'){ renderCashPicker(); renderCashNeedsAttention(); }
+  if(name === 'bank'){ renderVVPicker(); renderBankNeedsReceipt(); }
+  if(name === 'records') renderRecordsTab();
+  if(name === 'archive') renderArchive();
 }
 
-// ─── Load ─────────────────────────────────────────────────────
-async function loadAll() {
-  await loadClients(); await loadSessions();
-  renderDashboard(); renderSessionsTab(); renderClientsTab();
-  loadCashPayments(); loadVVPayments();
+// ─── Load data ──────────────────────────────────────────────
+async function reloadAll(){
+  if(!sb) return;
+
+  hideBanner();
+
+  // Detect schema gaps gently
+  const missing = [];
+
+  // Load everything
+  const [cRes, sRes, cashRes, vvRes] = await Promise.all([
+    sb.from('clients').select('*').order('name'),
+    sb.from('sessions').select('*').order('date', { ascending:false }),
+    sb.from('cash_payments').select('*').order('date', { ascending:false }),
+    sb.from('vv_payments').select('*').order('date', { ascending:false }),
+  ]);
+
+  if(cRes.error || sRes.error || cashRes.error || vvRes.error){
+    showBanner('error', `<strong>Supabase error.</strong> ${[cRes.error, sRes.error, cashRes.error, vvRes.error].filter(Boolean).map(e=>e.message).join(' • ')}`);
+    return;
+  }
+
+  clients = cRes.data || [];
+  sessions = sRes.data || [];
+  cashPayments = cashRes.data || [];
+  vvPayments = vvRes.data || [];
+
+  // schema checks:
+  // sessions.status
+  const anySession = sessions[0] || null;
+  if(anySession && !('status' in anySession)){
+    missing.push("sessions.status (recommended: add column for scheduled vs happened)");
+  }
+  // vv_payments.receipt_sent
+  const anyVV = vvPayments[0] || null;
+  if(anyVV && !('receipt_sent' in anyVV)){
+    missing.push("vv_payments.receipt_sent (recommended: add column for receipt tracking)");
+  }
+
+  if(missing.length){
+    showBanner('warn',
+      `<strong>Schema notice:</strong> Some optional columns are missing. App will still run, but you’ll lose features.<br/>
+      <div class="small-note" style="margin-top:0.4rem">Missing: ${missing.join(' • ')}</div>`
+    );
+  }
+
+  populateClientSelects();
+  renderHome();
+  renderSessionsTab();
+  renderClientsTab();
+  renderCashPicker();
+  renderCashNeedsAttention();
+  renderVVPicker();
+  renderBankNeedsReceipt();
+  renderRecordsTab();
+  renderArchive();
 }
-async function loadClients() {
-  const { data } = await sbClient.from('clients').select('*').order('name');
-  clients = data || []; populateClientSelects();
+
+// ─── Home month navigation ──────────────────────────────────
+function changeMonth(dir){
+  viewMonth.setMonth(viewMonth.getMonth() + dir);
+  renderHome();
 }
-async function loadSessions() {
-  const { data } = await sbClient.from('sessions').select('*').order('date', { ascending: false });
-  sessions = data || [];
+function goToThisMonth(){
+  viewMonth = new Date();
+  renderHome();
 }
-function populateClientSelects() {
+
+// ─── Archive month navigation ───────────────────────────────
+function changeArchiveMonth(dir){
+  archiveMonth.setMonth(archiveMonth.getMonth() + dir);
+  renderArchive();
+}
+function goArchiveThisMonth(){
+  archiveMonth = new Date();
+  renderArchive();
+}
+
+// ─── Clients select ─────────────────────────────────────────
+function populateClientSelects(){
   const sel = document.getElementById('session-client');
-  sel.innerHTML = clients.length
-    ? clients.map(c => `<option value="${c.id}">${c.name} (${c.type === 'cash' ? 'Cash' : 'Bank'} · ₪${c.rate})</option>`).join('')
-    : '<option value="">No clients yet — add one first</option>';
+  if(!sel) return;
+  if(!clients.length){
+    sel.innerHTML = '<option value="">No clients yet — add one first</option>';
+    return;
+  }
+  sel.innerHTML = clients.map(c => {
+    const t = c.type === 'cash' ? 'Cash' : 'Bank';
+    const net = Math.round(NET(c.rate));
+    return `<option value="${c.id}">${c.name} (${t} · ₪${c.rate} · net ₪${net})</option>`;
+  }).join('');
 }
 
-// ─── Dashboard ───────────────────────────────────────────────
-async function renderDashboard() {
-  const monthStart = getMonthStart();
-  const thisMonthSessions = sessions.filter(s => s.date >= monthStart);
+// ─── Home render ────────────────────────────────────────────
+function computeHighs(){
+  // "Highs" = best month metrics from all data:
+  // - highest earned month (happened sessions net)
+  // - highest projected month (scheduled net)
+  const byMonth = {};
+  for(const s of sessions){
+    const k = String(s.date||'').slice(0,7);
+    if(!k || k.length!==7) continue;
+    if(!byMonth[k]) byMonth[k] = { earned:0, projected:0, happenedCount:0, scheduledCount:0 };
+    const net = NET(clientRate(s.client_id));
+    const st = getSessionState(s);
+    if(st === 'paid' || st === 'happened'){
+      byMonth[k].earned += net;
+      byMonth[k].happenedCount += 1;
+    }else if(st === 'scheduled'){
+      byMonth[k].projected += net;
+      byMonth[k].scheduledCount += 1;
+    }
+  }
+  const keys = Object.keys(byMonth);
+  if(!keys.length) return null;
 
-  // Earned this month = all happened sessions (paid or not — money is yours once it happened)
-  let earnedThisMonth = 0;
-  thisMonthSessions.filter(s => getSessionStatus(s) === 'happened' || getSessionStatus(s) === 'paid').forEach(s => {
-    earnedThisMonth += NET(clientRate(s.client_id));
-  });
+  let bestEarned = { k: keys[0], v: byMonth[keys[0]].earned };
+  let bestProj = { k: keys[0], v: byMonth[keys[0]].projected };
+  for(const k of keys){
+    if(byMonth[k].earned > bestEarned.v) bestEarned = { k, v: byMonth[k].earned };
+    if(byMonth[k].projected > bestProj.v) bestProj = { k, v: byMonth[k].projected };
+  }
+  return { byMonth, bestEarned, bestProj };
+}
 
-  // Still to collect = happened but not physically received yet (all time, not just this month)
+async function renderHome(){
+  document.getElementById('home-month-title').textContent = monthTitle(viewMonth);
+
+  const monthKey = ym(viewMonth);
+  const monthSessions = sessions.filter(s => String(s.date||'').slice(0,7) === monthKey);
+
+  let earned = 0;
+  let projected = 0;
+
+  for(const s of monthSessions){
+    const net = NET(clientRate(s.client_id));
+    const st = getSessionState(s);
+    if(st === 'paid' || st === 'happened') earned += net;
+    if(st === 'scheduled') projected += net;
+  }
+
   let stillToCollect = 0;
-  sessions.filter(s => getSessionStatus(s) === 'happened').forEach(s => {
-    stillToCollect += NET(clientRate(s.client_id));
-  });
+  for(const s of sessions){
+    if(isHappenedUnpaid(s)){
+      stillToCollect += NET(clientRate(s.client_id));
+    }
+  }
 
-  // Potential = scheduled sessions this month if they happen
-  let scheduledThisMonth = 0;
-  thisMonthSessions.filter(s => getSessionStatus(s) === 'scheduled').forEach(s => {
-    scheduledThisMonth += NET(clientRate(s.client_id));
-  });
+  document.getElementById('home-earned').textContent = fmtMoney(earned);
+  document.getElementById('home-collect').textContent = fmtMoney(stillToCollect);
+  document.getElementById('home-projected').textContent = projected > 0 ? fmtMoney(projected) : '—';
 
-  const monthTitleEl = document.getElementById('dash-month-title');
-  if (monthTitleEl) monthTitleEl.textContent = monthName();
+  // Action items
+  const happenedUnpaid = sessions.filter(s => isHappenedUnpaid(s));
+  const cashHappened = happenedUnpaid.filter(s => clientType(s.client_id) === 'cash');
+  const bankHappened = happenedUnpaid.filter(s => clientType(s.client_id) === 'bank');
+  const vvOwed = (cashPayments || []).filter(p => !p.paid_to_vv).reduce((sum,p)=> sum + Number(p.vv_owed||0), 0);
 
-  document.getElementById('traj-received').textContent = '₪' + Math.round(earnedThisMonth);
-  document.getElementById('traj-outstanding').textContent = stillToCollect > 0 ? '₪' + Math.round(stillToCollect) : '₪0';
-  document.getElementById('traj-projected').textContent = scheduledThisMonth > 0 ? '₪' + Math.round(scheduledThisMonth) : '—';
+  const receiptMissingCount = (vvPayments || []).filter(p => ('receipt_sent' in p) ? !p.receipt_sent : false).length;
 
-  // Action items: all sessions (not just this month) that need attention
-  const happenedUnpaid = sessions.filter(s => getSessionStatus(s) === 'happened');
-  const scheduledAll = sessions.filter(s => getSessionStatus(s) === 'scheduled');
-
-  const { data: cashPmts } = await sbClient.from('cash_payments').select('*').eq('paid_to_vv', false);
-  const vvOwed = (cashPmts || []).reduce((sum, p) => sum + Number(p.vv_owed), 0);
-  const { data: vvPmts } = await sbClient.from('vv_payments').select('*').eq('receipt_sent', false);
-  const pendingReceipts = (vvPmts || []).length;
-
-  const cashHappened = happenedUnpaid.filter(s => clients.find(c => c.id === s.client_id)?.type === 'cash');
-  const bankHappened = happenedUnpaid.filter(s => clients.find(c => c.id === s.client_id)?.type === 'bank');
+  const scheduledAll = sessions.filter(s => getSessionState(s) === 'scheduled');
 
   const items = [];
-  if (cashHappened.length) items.push({ dot: 'var(--blue)', text: `${cashHappened.length} cash session${cashHappened.length>1?'s':''} to record payment for`, tab: 'cash', label: 'Record →' });
-  if (bankHappened.length) items.push({ dot: 'var(--accent)', text: `${bankHappened.length} bank session${bankHappened.length>1?'s':''} waiting for VV to pay`, tab: 'bank', label: 'Record →' });
-  if (vvOwed > 0) items.push({ dot: 'var(--amber)', text: `₪${Math.round(vvOwed)} you still owe VV`, tab: 'cash', label: 'View →' });
-  if (pendingReceipts > 0) items.push({ dot: 'var(--red)', text: `${pendingReceipts} bank transfer${pendingReceipts>1?'s':''} need a receipt`, tab: 'bank', label: 'View →' });
-  if (scheduledAll.length) items.push({ dot: 'var(--text-dim)', text: `${scheduledAll.length} session${scheduledAll.length>1?'s':''} scheduled — confirm when done`, tab: 'sessions', label: 'View →' });
+  if(cashHappened.length) items.push({ dot:'var(--blue)', text:`${cashHappened.length} cash session${cashHappened.length>1?'s':''} to record payment for`, tab:'cash', label:'Record →' });
+  if(bankHappened.length) items.push({ dot:'var(--accent)', text:`${bankHappened.length} bank session${bankHappened.length>1?'s':''} waiting for VV transfer`, tab:'bank', label:'Record →' });
+  if(vvOwed > 0) items.push({ dot:'var(--amber)', text:`${fmtMoney(vvOwed)} you still owe VV (from cash batches)`, tab:'cash', label:'View →' });
+  if(receiptMissingCount > 0) items.push({ dot:'var(--red)', text:`${receiptMissingCount} transfer${receiptMissingCount>1?'s':''} need a receipt`, tab:'bank', label:'View →' });
+  if(scheduledAll.length) items.push({ dot:'var(--text-dim)', text:`${scheduledAll.length} session${scheduledAll.length>1?'s':''} scheduled — confirm when done`, tab:'sessions', label:'View →' });
 
-  const pendingEl = document.getElementById('pending-actions');
-  if (!items.length) {
-    pendingEl.innerHTML = `<div class="empty-state" style="padding:1rem 0"><div class="icon">✅</div>All caught up!</div>`;
-  } else {
-    pendingEl.innerHTML = `<div class="pending-items">${items.map(it =>
-      `<div class="pending-item">
-        <div class="pi-left"><div class="pi-dot" style="background:${it.dot}"></div><span>${it.text}</span></div>
-        <button class="btn btn-ghost btn-sm" onclick="switchTab('${it.tab}')">${it.label}</button>
-      </div>`).join('')}</div>`;
+  const homeActions = document.getElementById('home-actions');
+  if(!items.length){
+    homeActions.innerHTML = `<div class="empty-state" style="padding:1rem 0">
+      <div class="icon">✅</div>All caught up!
+    </div>`;
+  }else{
+    homeActions.innerHTML = `<div style="display:flex; flex-direction:column; gap:0.5rem">
+      ${items.map(it => `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; padding:0.75rem 1rem; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius)">
+          <div style="display:flex; align-items:center; gap:0.6rem">
+            <div style="width:7px; height:7px; border-radius:50%; background:${it.dot}"></div>
+            <span>${it.text}</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="switchTab('${it.tab}')">${it.label}</button>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Highs
+  const highs = computeHighs();
+  const highsEl = document.getElementById('home-highs');
+  if(!highs){
+    highsEl.textContent = 'No data yet.';
+  }else{
+    const bestEarnedLabel = fmtDate(highs.bestEarned.k + '-01').split(' ').slice(1).join(' ');
+    const bestProjLabel = fmtDate(highs.bestProj.k + '-01').split(' ').slice(1).join(' ');
+    highsEl.innerHTML = `
+      <div style="display:flex; gap:1.25rem; flex-wrap:wrap">
+        <div><strong>Best earned month:</strong> ${highs.bestEarned.k} · <span style="font-family:'DM Mono',monospace;color:var(--green)">${fmtMoney(highs.bestEarned.v)} net</span></div>
+        <div><strong>Best projected month:</strong> ${highs.bestProj.k} · <span style="font-family:'DM Mono',monospace;color:var(--text-muted)">${fmtMoney(highs.bestProj.v)} net</span></div>
+      </div>
+      <div class="small-note" style="margin-top:0.5rem">“Earned” = all happened sessions net. “Projected” = all scheduled sessions net.</div>
+    `;
   }
 }
 
-// ─── Sessions ────────────────────────────────────────────────
-async function addSession() {
+// ─── Sessions ───────────────────────────────────────────────
+async function addSession(){
   const client_id = document.getElementById('session-client').value;
   const date = document.getElementById('session-date').value;
   const status = document.getElementById('session-status').value;
-  if (!client_id || !date) { toast('Fill all fields', 'error'); return; }
+  if(!client_id || !date){ toast('Fill all fields', 'error'); return; }
+
   const btn = document.getElementById('add-session-btn');
-  btn.textContent = '…'; btn.disabled = true;
-  const { error } = await sbClient.from('sessions').insert({ client_id, date, status, paid: false });
-  btn.textContent = '+ Add'; btn.disabled = false;
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  btn.disabled = true; btn.textContent = '…';
+
+  // Insert compatible row:
+  // - always store paid=false for new
+  // - store status if column exists (we’ll try; if schema lacks it, Supabase will error)
+  const payload = { client_id, date, paid:false };
+  payload.status = status;
+
+  let { error } = await sb.from('sessions').insert(payload);
+
+  // If status column doesn't exist, retry without it
+  if(error && /column.*status/i.test(error.message)){
+    const retry = await sb.from('sessions').insert({ client_id, date, paid:false });
+    error = retry.error || null;
+  }
+
+  btn.disabled = false; btn.textContent = '+ Add';
+
+  if(error){ toast('Error: ' + error.message, 'error'); return; }
+
   toast(status === 'scheduled' ? 'Session scheduled ◷' : 'Session logged ✓', 'success');
-  await loadSessions(); renderSessionsTab(); renderDashboard();
-  renderCashSessionPicker(); renderVVSessionPicker();
+  await reloadAll();
 }
 
-async function markSessionHappened(id) {
-  const { error } = await sbClient.from('sessions').update({ status: 'happened' }).eq('id', id);
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
-  toast('Marked as happened ✓', 'success');
-  await loadSessions(); renderSessionsTab(); renderDashboard();
-  renderCashSessionPicker(); renderVVSessionPicker();
-}
-
-async function softDeleteSession(id) {
-  const s = sessions.find(x => x.id === id);
-  if (!s) return;
-  lastDeleted = s;
-  sessions = sessions.filter(x => x.id !== id);
-  renderSessionsTab(); renderDashboard();
-  renderCashSessionPicker(); renderVVSessionPicker();
-  toast('Deleted — tap to undo', 'success');
-  const toastEl = document.getElementById('toast');
-  toastEl.classList.add('clickable');
-  toastEl.onclick = undoDelete;
-  clearTimeout(undoTimer);
-  undoTimer = setTimeout(async () => {
-    toastEl.onclick = null;
-    toastEl.classList.remove('clickable');
-    const { error } = await sbClient.from('sessions').delete().eq('id', id);
-    if (error) toast('Delete failed: ' + error.message, 'error');
-    lastDeleted = null;
-  }, 4500);
-}
-
-function undoDelete() {
-  if (!lastDeleted) return;
-  clearTimeout(undoTimer);
-  sessions = [lastDeleted, ...sessions].sort((a,b) => a.date < b.date ? 1 : -1);
-  lastDeleted = null;
-  const toastEl = document.getElementById('toast');
-  toastEl.onclick = null;
-  toastEl.classList.remove('clickable');
-  toast('Undo ✓', 'success');
-  renderSessionsTab(); renderDashboard();
-  renderCashSessionPicker(); renderVVSessionPicker();
-}
-
-function filterSessions(filter, btn) {
-  currentSessionFilter = filter;
+function setSessionFilter(filter, btn){
+  sessionFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active'); renderSessionsTab();
-}
-
-function getSessionStatus(s) {
-  // backward compat: old sessions with no status field but paid=true
-  if (s.paid) return 'paid';
-  if (s.status) return s.status;
-  return 'happened'; // old sessions without status = happened (legacy)
-}
-
-let sessionSortCol = 'date', sessionSortDir = 'desc';
-
-function sortSessionsBy(col) {
-  if (sessionSortCol === col) sessionSortDir = sessionSortDir === 'asc' ? 'desc' : 'asc';
-  else { sessionSortCol = col; sessionSortDir = col === 'date' ? 'desc' : 'asc'; }
+  if(btn) btn.classList.add('active');
   renderSessionsTab();
 }
 
-function renderSessionsTab() {
+function sortSessionsBy(col){
+  if(sessionSortCol === col) sessionSortDir = (sessionSortDir === 'asc') ? 'desc' : 'asc';
+  else { sessionSortCol = col; sessionSortDir = (col === 'date') ? 'desc' : 'asc'; }
+  renderSessionsTab();
+}
+
+async function changeSessionStatus(id, newStatus){
+  // paid stays paid; status changes only scheduled/happened
+  const payload = { status: newStatus };
+  let { error } = await sb.from('sessions').update(payload).eq('id', id);
+
+  // If status column doesn't exist, cannot do scheduled/happened changes
+  if(error && /column.*status/i.test(error.message)){
+    toast('Your sessions table has no "status" column. Add it to use scheduled/happened.', 'warn');
+    return;
+  }
+  if(error){ toast('Error: ' + error.message, 'error'); return; }
+
+  toast('Status updated ✓', 'success');
+  await reloadAll();
+}
+
+async function softDeleteSession(id){
+  // Simple hard delete (no undo) — keeps this version reliable.
+  if(!confirm('Delete this session?')) return;
+  const { error } = await sb.from('sessions').delete().eq('id', id);
+  if(error){ toast('Error: ' + error.message, 'error'); return; }
+  toast('Deleted ✓', 'success');
+  await reloadAll();
+}
+
+function renderSessionsTab(){
   const el = document.getElementById('sessions-list');
   let list = [...sessions];
 
-  if (currentSessionFilter === 'happened') list = list.filter(s => getSessionStatus(s) === 'happened');
-  else if (currentSessionFilter === 'scheduled') list = list.filter(s => getSessionStatus(s) === 'scheduled');
-  else if (currentSessionFilter === 'paid') list = list.filter(s => getSessionStatus(s) === 'paid');
+  if(sessionFilter === 'happened') list = list.filter(s => getSessionState(s)==='happened');
+  if(sessionFilter === 'scheduled') list = list.filter(s => getSessionState(s)==='scheduled');
+  if(sessionFilter === 'paid') list = list.filter(s => getSessionState(s)==='paid');
+  if(sessionFilter === 'unpaid') list = list.filter(s => isHappenedUnpaid(s));
 
   const dir = sessionSortDir === 'asc' ? 1 : -1;
-  if (sessionSortCol === 'date') list.sort((a,b) => (a.date > b.date ? 1 : -1) * dir);
-  else if (sessionSortCol === 'client') list.sort((a,b) => clientName(a.client_id).localeCompare(clientName(b.client_id)) * dir);
-  else if (sessionSortCol === 'status') {
-    const order = { scheduled: 0, happened: 1, paid: 2 };
-    list.sort((a,b) => ((order[getSessionStatus(a)]||0) - (order[getSessionStatus(b)]||0)) * dir);
+
+  if(sessionSortCol === 'date'){
+    list.sort((a,b)=> (a.date > b.date ? 1 : -1) * dir);
+  }else if(sessionSortCol === 'client'){
+    list.sort((a,b)=> clientName(a.client_id).localeCompare(clientName(b.client_id)) * dir);
+  }else if(sessionSortCol === 'type'){
+    list.sort((a,b)=> String(clientType(a.client_id)||'').localeCompare(String(clientType(b.client_id)||'')) * dir);
+  }else if(sessionSortCol === 'state'){
+    const order = { scheduled:0, happened:1, paid:2 };
+    list.sort((a,b)=> ((order[getSessionState(a)]||0) - (order[getSessionState(b)]||0)) * dir);
   }
 
-  const arrow = (col) => sessionSortCol === col ? (sessionSortDir === 'asc' ? ' ↑' : ' ↓') : '';
-  const thStyle = 'cursor:pointer;user-select:none;';
-
-  if (!list.length) {
+  if(!list.length){
     el.innerHTML = `<div class="empty-state"><div class="icon">📋</div>
-      ${currentSessionFilter === 'all' ? 'No sessions yet' : 'No ' + currentSessionFilter + ' sessions'}
-      <div class="action-hint">${clients.length === 0 ? '<a onclick="switchTab(\'clients\')">Add a client</a> to get started' : 'Log a session using the form above'}</div>
-    </div>`; return;
+      ${sessionFilter==='all' ? 'No sessions yet' : `No ${sessionFilter} sessions`}
+      <div class="small-note" style="margin-top:0.6rem">
+        ${clients.length===0 ? `Add a client in <a onclick="switchTab('clients')">Clients</a>.` : 'Use the form above to log.'}
+      </div>
+    </div>`;
+    return;
   }
 
+  const arrow = (col)=> sessionSortCol===col ? (sessionSortDir==='asc' ? ' ↑' : ' ↓') : '';
+  const thStyle = 'cursor:pointer; user-select:none;';
   el.innerHTML = `<div class="table-wrap"><table>
     <thead><tr>
       <th style="${thStyle}" onclick="sortSessionsBy('date')">Date${arrow('date')}</th>
       <th style="${thStyle}" onclick="sortSessionsBy('client')">Client${arrow('client')}</th>
-      <th>Type</th>
-      <th>You Keep</th>
-      <th style="${thStyle}" onclick="sortSessionsBy('status')">Status${arrow('status')}</th>
+      <th style="${thStyle}" onclick="sortSessionsBy('type')">Type${arrow('type')}</th>
+      <th>You keep</th>
+      <th style="${thStyle}" onclick="sortSessionsBy('state')">State${arrow('state')}</th>
       <th></th>
     </tr></thead>
-    <tbody>${list.map(s => {
-      const c = clients.find(c => c.id === s.client_id);
-      const status = getSessionStatus(s);
-      // Inline status selector — disabled for paid (can't un-pay from here)
-      const statusSelect = status === 'paid'
-        ? '<span class="badge badge-green">✓ Paid</span>'
-        : `<select class="status-select" onchange="changeSessionStatus('${s.id}', this.value)" style="font-size:0.75rem;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer">
-            <option value="scheduled" ${status === 'scheduled' ? 'selected' : ''}>◷ Scheduled</option>
-            <option value="happened" ${status === 'happened' ? 'selected' : ''}>✓ Happened</option>
-          </select>`;
-      return `<tr>
-        <td style="font-family:'DM Mono',monospace;font-size:0.77rem;color:var(--text-muted)">${fmtDate(s.date)}</td>
-        <td><strong>${c ? c.name : '—'}</strong></td>
-        <td>${c ? (c.type === 'cash' ? '<span class="badge badge-cash">Cash</span>' : '<span class="badge badge-bank">Bank</span>') : ''}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${c ? Math.round(NET(c.rate)) : '—'}</td>
-        <td>${statusSelect}</td>
-        <td style="text-align:right">
-          <button class="btn-icon" title="Delete" onclick="softDeleteSession('${s.id}')">🗑️</button>
-        </td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
+    <tbody>
+      ${list.map(s=>{
+        const c = clientById(s.client_id);
+        const st = getSessionState(s);
+
+        let typeBadge = '';
+        if(c) typeBadge = (c.type==='cash') ? '<span class="badge badge-cash">Cash</span>' : '<span class="badge badge-bank">Bank</span>';
+
+        const keep = c ? fmtMoney(NET(c.rate)) : '—';
+
+        let stateCell = '';
+        if(st==='paid'){
+          stateCell = '<span class="badge badge-green">✓ Paid</span>';
+        }else if(st==='scheduled'){
+          // allow switch to happened
+          stateCell = `
+            <select onchange="changeSessionStatus('${s.id}', this.value)" style="font-size:0.78rem;padding:0.28rem 0.55rem;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer">
+              <option value="scheduled" selected>◷ Scheduled</option>
+              <option value="happened">✓ Happened</option>
+            </select>`;
+        }else{
+          // happened and unpaid
+          stateCell = `
+            <select onchange="changeSessionStatus('${s.id}', this.value)" style="font-size:0.78rem;padding:0.28rem 0.55rem;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer">
+              <option value="scheduled">◷ Scheduled</option>
+              <option value="happened" selected>✓ Happened</option>
+            </select>`;
+        }
+
+        return `<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-muted)">${fmtDate(s.date)}</td>
+          <td><strong>${c ? c.name : '—'}</strong></td>
+          <td>${typeBadge}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem">${keep}</td>
+          <td>${stateCell}</td>
+          <td style="text-align:right"><button class="btn-icon" title="Delete" onclick="softDeleteSession('${s.id}')">🗑️</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 
-async function changeSessionStatus(id, newStatus) {
-  // Optimistic update
-  const s = sessions.find(x => x.id === id);
-  if (s) s.status = newStatus;
-  renderDashboard(); renderCashSessionPicker(); renderVVSessionPicker();
-  const { error } = await sbClient.from('sessions').update({ status: newStatus }).eq('id', id);
-  if (error) { toast('Error: ' + error.message, 'error'); await loadSessions(); renderSessionsTab(); return; }
-  toast('Status updated ✓', 'success');
-}
-
-// ─── Clients ─────────────────────────────────────────────────
-async function addClient() {
+// ─── Clients ────────────────────────────────────────────────
+async function addClient(){
   const name = document.getElementById('client-name').value.trim();
   const type = document.getElementById('client-type').value;
   const rate = parseFloat(document.getElementById('client-rate').value);
-  if (!name || !rate) { toast('Fill all fields', 'error'); return; }
-  const { error } = await sbClient.from('clients').insert({ name, type, rate });
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
-  toast('Client added ✓', 'success');
+
+  if(!name || !rate){ toast('Fill all fields', 'error'); return; }
+
+  const { error } = await sb.from('clients').insert({ name, type, rate });
+  if(error){ toast('Error: ' + error.message, 'error'); return; }
+
   document.getElementById('client-name').value = '';
   document.getElementById('client-rate').value = '';
-  await loadClients(); renderClientsTab();
+  toast('Client added ✓', 'success');
+  await reloadAll();
 }
 
-function renderClientsTab() {
+function renderClientsTab(){
   const el = document.getElementById('clients-list');
-  if (!clients.length) {
-    el.innerHTML = `<div class="empty-state"><div class="icon">👤</div>No clients yet<div class="action-hint">Add your first client using the form above</div></div>`;
+  if(!clients.length){
+    el.innerHTML = `<div class="empty-state"><div class="icon">👤</div>No clients yet<div class="small-note" style="margin-top:0.6rem">Add your first client above.</div></div>`;
     return;
   }
+
   el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Name</th><th>Type</th><th>Rate</th><th>You Keep</th><th>Sessions</th></tr></thead>
-    <tbody>${clients.map(c => {
-      const count = sessions.filter(s => s.client_id === c.id).length;
-      const unpaid = sessions.filter(s => s.client_id === c.id && !s.paid).length;
-      return `<tr>
-        <td><strong>${c.name}</strong></td>
-        <td>${c.type === 'cash' ? '<span class="badge badge-cash">Cash</span>' : '<span class="badge badge-bank">Bank</span>'}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${c.rate}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(NET(c.rate))}</td>
-        <td><span style="font-weight:600">${count}</span>${unpaid > 0 ? ` <span style="font-size:0.7rem;color:var(--amber)">${unpaid} unpaid</span>` : ''}</td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
+    <thead><tr><th>Name</th><th>Type</th><th>Rate</th><th>You keep</th><th>Sessions</th></tr></thead>
+    <tbody>
+      ${clients.map(c=>{
+        const count = sessions.filter(s => s.client_id === c.id).length;
+        // IMPORTANT fix: only count happened + unpaid as unpaid
+        const unpaid = sessions.filter(s => s.client_id === c.id && isHappenedUnpaid(s)).length;
+        const typeBadge = c.type==='cash' ? '<span class="badge badge-cash">Cash</span>' : '<span class="badge badge-bank">Bank</span>';
+        return `<tr>
+          <td><strong>${c.name}</strong></td>
+          <td>${typeBadge}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(Number(c.rate||0))}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">${fmtMoney(NET(c.rate))}</td>
+          <td><strong>${count}</strong>${unpaid>0 ? ` <span class="badge badge-amber">${unpaid} unpaid</span>` : ''}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 
-// ─── Cash ────────────────────────────────────────────────────
-function renderCashSessionPicker() {
-  const el = document.getElementById('cash-session-picker');
-  const cashClientIds = clients.filter(c => c.type === 'cash').map(c => c.id);
-  const unpaid = sessions.filter(s => !s.paid && getSessionStatus(s) === 'happened' && cashClientIds.includes(s.client_id));
-  if (!unpaid.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:1.25rem"><div class="icon">✓</div>No unpaid cash sessions<div class="action-hint">Log sessions in the <a onclick="switchTab('sessions')">Sessions tab</a></div></div>`;
-    document.getElementById('cash-summary').style.display = 'none'; return;
+// ─── Cash batching ───────────────────────────────────────────
+function renderCashPicker(){
+  const host = document.getElementById('cash-session-picker');
+  const cashClientIds = clients.filter(c => c.type==='cash').map(c=>c.id);
+  const unpaidCashSessions = sessions
+    .filter(s => cashClientIds.includes(s.client_id))
+    .filter(s => isHappenedUnpaid(s));
+
+  if(!unpaidCashSessions.length){
+    host.innerHTML = `<div class="empty-state" style="padding:1.25rem">
+      <div class="icon">✓</div>No unpaid cash sessions
+      <div class="small-note" style="margin-top:0.6rem">Log sessions in <a onclick="switchTab('sessions')">Sessions</a>.</div>
+    </div>`;
+    document.getElementById('cash-summary').style.display = 'none';
+    return;
   }
-  el.innerHTML = `<div class="session-picker">${unpaid.map(s => {
-    const c = clients.find(c => c.id === s.client_id);
-    return `<label class="session-check-item">
-      <input type="checkbox" value="${s.id}" data-rate="${c ? c.rate : 0}" onchange="updateCashSummary()">
-      <span style="font-weight:600">${c ? c.name : '?'}</span>
-      <span style="color:var(--text-muted);font-size:0.77rem">${fmtDateShort(s.date)}</span>
-      <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.78rem">₪${c ? Math.round(NET(c.rate)) : '?'} net</span>
-    </label>`;
-  }).join('')}</div>`;
+
+  host.innerHTML = `<div class="session-picker" id="cash-picker-inner">
+    ${unpaidCashSessions.map(s=>{
+      const c = clientById(s.client_id);
+      const net = c ? Math.round(NET(c.rate)) : 0;
+      return `<label class="session-check-item">
+        <input type="checkbox" value="${s.id}" data-rate="${c ? Number(c.rate||0) : 0}" onchange="updateCashSummary()">
+        <span style="font-weight:900">${c ? c.name : '?'}</span>
+        <span style="color:var(--text-muted);font-size:0.78rem">${fmtDateShort(s.date)}</span>
+        <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.78rem">net ₪${net}</span>
+      </label>`;
+    }).join('')}
+  </div>`;
   updateCashSummary();
 }
 
-function updateCashSummary() {
-  const checked = document.querySelectorAll('#cash-session-picker input:checked');
+function updateCashSummary(){
+  const checked = [...document.querySelectorAll('#cash-session-picker input[type="checkbox"]:checked')];
   let gross = 0;
-  checked.forEach(cb => gross += parseFloat(cb.dataset.rate || 0));
-  document.querySelectorAll('#cash-session-picker .session-check-item').forEach(item => {
-    item.classList.toggle('selected', item.querySelector('input').checked);
+  checked.forEach(cb => gross += Number(cb.dataset.rate || 0));
+
+  document.querySelectorAll('#cash-session-picker .session-check-item').forEach(item=>{
+    const cb = item.querySelector('input');
+    item.classList.toggle('selected', cb && cb.checked);
   });
+
   const show = checked.length > 0;
   document.getElementById('cash-summary').style.display = show ? 'flex' : 'none';
   document.getElementById('cash-count').textContent = checked.length;
-  document.getElementById('cash-total').textContent = '₪' + Math.round(NET(gross));
-  document.getElementById('cash-vv-owed').textContent = '₪' + Math.round(gross * VV_CUT);
+  document.getElementById('cash-youkeep').textContent = fmtMoney(NET(gross));
+  document.getElementById('cash-vvowed').textContent = fmtMoney(gross * VV_CUT);
 }
 
-async function recordCashPayment() {
-  const checked = [...document.querySelectorAll('#cash-session-picker input:checked')];
-  if (!checked.length) { toast('Select at least one session', 'error'); return; }
+async function recordCashPayment(){
+  const checked = [...document.querySelectorAll('#cash-session-picker input[type="checkbox"]:checked')];
+  if(!checked.length){ toast('Select at least one session', 'error'); return; }
   const date = document.getElementById('cash-payment-date').value;
-  if (!date) { toast('Select a date', 'error'); return; }
+  if(!date){ toast('Select a date', 'error'); return; }
+
   const session_ids = checked.map(cb => cb.value);
   let gross = 0;
-  checked.forEach(cb => gross += parseFloat(cb.dataset.rate || 0));
-  const { error } = await sbClient.from('cash_payments').insert({
-    date, session_ids, total: gross, vv_owed: gross * VV_CUT, paid_to_vv: false
-  });
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
-  await sbClient.from('sessions').update({ paid: true }).in('id', session_ids);
-  toast('Cash payment recorded ✓', 'success');
-  await loadSessions(); renderSessionsTab(); renderCashSessionPicker(); loadCashPayments(); renderDashboard();
+  checked.forEach(cb => gross += Number(cb.dataset.rate || 0));
+
+  // Insert payment batch. Your original schema has client_id in cash_payments;
+  // this UI supports multi-client batching; if your table requires client_id, we’ll use null or first client.
+  // (Best practice: remove client_id column, but we’ll handle both.)
+  const firstSession = sessions.find(s=>s.id===session_ids[0]);
+  const client_id = firstSession ? firstSession.client_id : null;
+
+  let payload = {
+    date,
+    session_ids,
+    total: gross,
+    vv_owed: gross * VV_CUT,
+    paid_to_vv: false
+  };
+
+  // Try insert without client_id, then fallback with client_id if required
+  let { error } = await sb.from('cash_payments').insert(payload);
+  if(error && /null value in column "client_id"/i.test(error.message)){
+    payload.client_id = client_id;
+    const retry = await sb.from('cash_payments').insert(payload);
+    error = retry.error || null;
+  }
+  if(error){ toast('Error: ' + error.message, 'error'); return; }
+
+  // Mark sessions as paid=true (money received)
+  const upd = await sb.from('sessions').update({ paid:true }).in('id', session_ids);
+  if(upd.error){ toast('Payment saved but could not mark sessions paid: ' + upd.error.message, 'warn'); }
+
+  toast('Cash batch recorded ✓', 'success');
+  await reloadAll();
 }
 
-async function loadCashPayments() {
-  const { data } = await sbClient.from('cash_payments').select('*').order('date', { ascending: false });
-  renderCashNeedsAttention(data || []);
-}
-
-function renderCashNeedsAttention(payments) {
+function renderCashNeedsAttention(){
   const el = document.getElementById('cash-needs-attention');
-  const pending = payments.filter(p => !p.paid_to_vv);
-  if (!pending.length) {
+  const pending = (cashPayments || []).filter(p => !p.paid_to_vv);
+
+  if(!pending.length){
     el.innerHTML = `<div class="empty-state" style="padding:1.25rem"><div class="icon">✅</div>No pending VV payments</div>`;
     return;
   }
+
   el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Date</th><th>Sessions</th><th>Gross</th><th>You Kept (85%)</th><th>VV Owed (15%)</th><th>Paid VV?</th></tr></thead>
-    <tbody>${pending.map(p => `<tr>
-      <td style="font-family:'DM Mono',monospace;font-size:0.77rem;color:var(--text-muted)">${fmtDate(p.date)}</td>
-      <td>${p.session_ids.length} session${p.session_ids.length !== 1 ? 's' : ''}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(Number(p.total))}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">₪${Math.round(NET(Number(p.total)))}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--amber)">₪${Math.round(Number(p.vv_owed))}</td>
-      <td><label class="toggle-wrap">
-        <label class="toggle"><input type="checkbox" ${p.paid_to_vv ? 'checked' : ''} onchange="toggleCashPaidVV('${p.id}',this.checked)"><span class="toggle-slider"></span></label>
-        <span style="font-size:0.73rem;color:var(--text-muted)">${p.paid_to_vv ? 'Paid' : 'Pending'}</span>
-      </label></td>
-    </tr>`).join('')}</tbody></table></div>`;
+    <thead><tr><th>Date</th><th>Sessions</th><th>Gross</th><th>You kept</th><th>VV owed</th><th>Paid VV?</th></tr></thead>
+    <tbody>
+      ${pending.map(p=>{
+        const gross = Number(p.total||0);
+        const vvOwed = Number(p.vv_owed||0);
+        return `<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-muted)">${fmtDate(p.date)}</td>
+          <td>${(p.session_ids||[]).length}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(gross)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">${fmtMoney(NET(gross))}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--amber)">${fmtMoney(vvOwed)}</td>
+          <td>
+            <label class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" ${p.paid_to_vv ? 'checked' : ''} onchange="toggleCashPaidVV('${p.id}', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="small-note">${p.paid_to_vv ? 'Paid' : 'Pending'}</span>
+            </label>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 
-async function toggleCashPaidVV(id, checked) {
-  await sbClient.from('cash_payments').update({ paid_to_vv: checked }).eq('id', id);
+async function toggleCashPaidVV(id, checked){
+  const { error } = await sb.from('cash_payments').update({ paid_to_vv: checked }).eq('id', id);
+  if(error){ toast('Error: ' + error.message, 'error'); return; }
   toast(checked ? 'Marked paid to VV ✓' : 'Marked pending', 'success');
-  loadCashPayments(); renderDashboard(); loadVVPayments();
+  await reloadAll();
 }
 
-// ─── Bank Transfer ────────────────────────────────────────────
-function renderVVSessionPicker() {
-  const el = document.getElementById('vv-session-picker');
-  const bankClientIds = clients.filter(c => c.type === 'bank').map(c => c.id);
-  const unpaid = sessions.filter(s => !s.paid && getSessionStatus(s) === 'happened' && bankClientIds.includes(s.client_id));
-  if (!unpaid.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:1.25rem"><div class="icon">✓</div>No pending bank transfer sessions<div class="action-hint">Log sessions in the <a onclick="switchTab('sessions')">Sessions tab</a></div></div>`;
-    document.getElementById('vv-summary').style.display = 'none'; return;
+// ─── Bank batching (VV transfers) ────────────────────────────
+function renderVVPicker(){
+  const host = document.getElementById('vv-session-picker');
+  const bankClientIds = clients.filter(c => c.type==='bank').map(c=>c.id);
+  const unpaidBankSessions = sessions
+    .filter(s => bankClientIds.includes(s.client_id))
+    .filter(s => isHappenedUnpaid(s));
+
+  if(!unpaidBankSessions.length){
+    host.innerHTML = `<div class="empty-state" style="padding:1.25rem">
+      <div class="icon">✓</div>No pending bank sessions
+      <div class="small-note" style="margin-top:0.6rem">Log sessions in <a onclick="switchTab('sessions')">Sessions</a>.</div>
+    </div>`;
+    document.getElementById('vv-summary').style.display = 'none';
+    return;
   }
-  el.innerHTML = `<div class="session-picker">${unpaid.map(s => {
-    const c = clients.find(c => c.id === s.client_id);
-    return `<label class="session-check-item">
-      <input type="checkbox" value="${s.id}" data-rate="${c ? c.rate : 0}" onchange="updateVVSummary()">
-      <span style="font-weight:600">${c ? c.name : '?'}</span>
-      <span style="color:var(--text-muted);font-size:0.77rem">${fmtDateShort(s.date)}</span>
-      <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.78rem">₪${c ? Math.round(NET(c.rate)) : '?'} net</span>
-    </label>`;
-  }).join('')}</div>`;
+
+  host.innerHTML = `<div class="session-picker" id="vv-picker-inner">
+    ${unpaidBankSessions.map(s=>{
+      const c = clientById(s.client_id);
+      const net = c ? Math.round(NET(c.rate)) : 0;
+      return `<label class="session-check-item">
+        <input type="checkbox" value="${s.id}" data-rate="${c ? Number(c.rate||0) : 0}" onchange="updateVVSummary()">
+        <span style="font-weight:900">${c ? c.name : '?'}</span>
+        <span style="color:var(--text-muted);font-size:0.78rem">${fmtDateShort(s.date)}</span>
+        <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.78rem">net ₪${net}</span>
+      </label>`;
+    }).join('')}
+  </div>`;
   updateVVSummary();
 }
 
-function updateVVSummary() {
-  const checked = document.querySelectorAll('#vv-session-picker input:checked');
+function updateVVSummary(){
+  const checked = [...document.querySelectorAll('#vv-session-picker input[type="checkbox"]:checked')];
   let gross = 0;
-  checked.forEach(cb => gross += parseFloat(cb.dataset.rate || 0));
-  document.querySelectorAll('#vv-session-picker .session-check-item').forEach(item => {
-    item.classList.toggle('selected', item.querySelector('input').checked);
+  checked.forEach(cb => gross += Number(cb.dataset.rate || 0));
+
+  document.querySelectorAll('#vv-session-picker .session-check-item').forEach(item=>{
+    const cb = item.querySelector('input');
+    item.classList.toggle('selected', cb && cb.checked);
   });
+
   const show = checked.length > 0;
   document.getElementById('vv-summary').style.display = show ? 'flex' : 'none';
   document.getElementById('vv-count').textContent = checked.length;
-  document.getElementById('vv-total').textContent = '₪' + Math.round(gross);
-  document.getElementById('vv-you-get').textContent = '₪' + Math.round(NET(gross));
+  document.getElementById('vv-gross').textContent = fmtMoney(gross);
+  document.getElementById('vv-youget').textContent = fmtMoney(NET(gross));
 }
 
-async function recordVVPayment() {
-  const checked = [...document.querySelectorAll('#vv-session-picker input:checked')];
-  if (!checked.length) { toast('Select at least one session', 'error'); return; }
+async function recordVVPayment(){
+  const checked = [...document.querySelectorAll('#vv-session-picker input[type="checkbox"]:checked')];
+  if(!checked.length){ toast('Select at least one session', 'error'); return; }
   const date = document.getElementById('vv-payment-date').value;
-  if (!date) { toast('Select a date', 'error'); return; }
+  if(!date){ toast('Select a date', 'error'); return; }
+
   const session_ids = checked.map(cb => cb.value);
   let gross = 0;
-  checked.forEach(cb => gross += parseFloat(cb.dataset.rate || 0));
-  const { error } = await sbClient.from('vv_payments').insert({
-    date, session_ids, total: gross, you_get: NET(gross), receipt_sent: false
-  });
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
-  await sbClient.from('sessions').update({ paid: true }).in('id', session_ids);
-  toast('Bank transfer recorded ✓', 'success');
-  await loadSessions(); renderSessionsTab(); renderVVSessionPicker(); loadVVPayments(); renderDashboard();
+  checked.forEach(cb => gross += Number(cb.dataset.rate || 0));
+
+  // Insert vv_payments. If receipt_sent column missing, it will fail; retry without it.
+  let payload = { date, session_ids, total: gross, you_get: NET(gross), receipt_sent: false };
+
+  // Some earlier schema might have client_id non-null; if so, fallback to first session client.
+  const firstSession = sessions.find(s=>s.id===session_ids[0]);
+  const fallbackClientId = firstSession ? firstSession.client_id : null;
+
+  let { error } = await sb.from('vv_payments').insert(payload);
+
+  if(error && /column.*receipt_sent/i.test(error.message)){
+    const retry = await sb.from('vv_payments').insert({ date, session_ids, total:gross, you_get:NET(gross) });
+    error = retry.error || null;
+  }
+  if(error && /null value in column "client_id"/i.test(error.message)){
+    payload.client_id = fallbackClientId;
+    const retry2 = await sb.from('vv_payments').insert(payload);
+    error = retry2.error || null;
+  }
+
+  if(error){ toast('Error: ' + error.message, 'error'); return; }
+
+  const upd = await sb.from('sessions').update({ paid:true }).in('id', session_ids);
+  if(upd.error){ toast('Transfer saved but could not mark sessions paid: ' + upd.error.message, 'warn'); }
+
+  toast('Transfer recorded ✓', 'success');
+  await reloadAll();
 }
 
-async function loadVVPayments() {
-  const { data } = await sbClient.from('vv_payments').select('*').order('date', { ascending: false });
-  renderBankNeedsReceipt(data || []);
-}
-
-function renderBankNeedsReceipt(payments) {
+function renderBankNeedsReceipt(){
   const el = document.getElementById('bank-needs-receipt');
-  const pending = payments.filter(p => !p.receipt_sent);
-  if (!pending.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:1.25rem"><div class="icon">✅</div>No receipts pending</div>`;
+  const pending = (vvPayments || []).filter(p => ('receipt_sent' in p) ? !p.receipt_sent : false);
+
+  if(!pending.length){
+    el.innerHTML = `<div class="empty-state" style="padding:1.25rem">
+      <div class="icon">✅</div>No receipts pending
+      <div class="small-note" style="margin-top:0.55rem">${(vvPayments||[]).length && !('receipt_sent' in (vvPayments[0]||{})) ? 'Note: add vv_payments.receipt_sent to track receipts here.' : ''}</div>
+    </div>`;
     return;
   }
+
   el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Date</th><th>Clients & Sessions</th><th>Full Rate</th><th>You Got (85%)</th><th>Receipt Sent?</th></tr></thead>
-    <tbody>${pending.map(p => {
-      const sessionLines = p.session_ids.map(sid => {
-        const s = sessions.find(x => x.id === sid);
-        if (!s) return '';
-        const c = clients.find(c => c.id === s.client_id);
-        return `<div class="batch-session-line"><strong>${c ? c.name : '?'}</strong><span>${fmtDateShort(s.date)}</span><span style="margin-left:auto;font-family:'DM Mono',monospace">₪${Math.round(NET(clientRate(s.client_id)))}</span></div>`;
-      }).join('');
-      const clientNames = [...new Set(p.session_ids.map(sid => {
-        const s = sessions.find(x => x.id === sid);
-        return s ? clientName(s.client_id) : null;
-      }).filter(Boolean))].join(', ');
-      return `<tr>
-        <td style="font-family:'DM Mono',monospace;font-size:0.77rem;color:var(--text-muted)">${fmtDate(p.date)}</td>
-        <td>
-          <div style="font-weight:600;font-size:0.82rem">${clientNames}</div>
-          <div style="font-size:0.72rem;color:var(--text-muted)">${p.session_ids.length} session${p.session_ids.length !== 1 ? 's' : ''}</div>
-          ${sessionLines ? `<div class="batch-detail-inner" style="margin-top:0.4rem">${sessionLines}</div>` : ''}
-        </td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(Number(p.total))}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">₪${Math.round(Number(p.you_get))}</td>
-        <td><label class="toggle-wrap">
-          <label class="toggle"><input type="checkbox" ${p.receipt_sent ? 'checked' : ''} onchange="toggleVVReceipt('${p.id}',this.checked)"><span class="toggle-slider"></span></label>
-          <span style="font-size:0.73rem;color:var(--text-muted)">${p.receipt_sent ? 'Sent' : 'Not sent'}</span>
-        </label></td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
+    <thead><tr><th>Date</th><th>Clients & sessions</th><th>Gross</th><th>You got</th><th>Receipt sent?</th></tr></thead>
+    <tbody>
+      ${pending.map(p=>{
+        const ids = p.session_ids || [];
+        const names = [...new Set(ids.map(sid=>{
+          const s = sessions.find(x=>x.id===sid);
+          return s ? clientName(s.client_id) : null;
+        }).filter(Boolean))].join(', ');
+
+        const lines = ids.map(sid=>{
+          const s = sessions.find(x=>x.id===sid);
+          if(!s) return '';
+          const c = clientById(s.client_id);
+          const net = c ? fmtMoney(NET(c.rate)) : '—';
+          return `<div style="display:flex; gap:0.75rem; align-items:center; padding:0.25rem 0; border-bottom:1px solid var(--border); font-size:0.78rem; color:var(--text-muted)">
+            <strong style="color:var(--text)">${c ? c.name : '?'}</strong>
+            <span>${fmtDateShort(s.date)}</span>
+            <span style="margin-left:auto; font-family:'DM Mono',monospace">${net}</span>
+          </div>`;
+        }).join('');
+
+        return `<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-muted)">${fmtDate(p.date)}</td>
+          <td>
+            <div style="font-weight:900">${names || '—'}</div>
+            <div class="small-note">${ids.length} session${ids.length!==1?'s':''}</div>
+            <div style="margin-top:0.5rem; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:0.5rem 0.75rem">
+              ${lines || '<span class="small-note">Session details unavailable</span>'}
+            </div>
+          </td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(Number(p.total||0))}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">${fmtMoney(Number(p.you_get||NET(p.total||0)))}</td>
+          <td>
+            <label class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" ${p.receipt_sent ? 'checked' : ''} onchange="toggleVVReceipt('${p.id}', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="small-note">${p.receipt_sent ? 'Sent' : 'Not sent'}</span>
+            </label>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 
-async function toggleVVReceipt(id, checked) {
-  await sbClient.from('vv_payments').update({ receipt_sent: checked }).eq('id', id);
-  toast(checked ? 'Receipt marked as sent ✓' : 'Marked as not sent', 'success');
-  loadVVPayments(); renderDashboard();
+async function toggleVVReceipt(id, checked){
+  const { error } = await sb.from('vv_payments').update({ receipt_sent: checked }).eq('id', id);
+  if(error){
+    if(/column.*receipt_sent/i.test(error.message)){
+      toast('Add vv_payments.receipt_sent to track receipts.', 'warn');
+      return;
+    }
+    toast('Error: ' + error.message, 'error');
+    return;
+  }
+  toast(checked ? 'Receipt marked sent ✓' : 'Marked not sent', 'success');
+  await reloadAll();
 }
 
-// ─── Records ─────────────────────────────────────────────────
-async function renderRecordsTab() {
+// ─── Records ────────────────────────────────────────────────
+async function renderRecordsTab(){
   const el = document.getElementById('records-content');
-  el.innerHTML = '<div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div>';
-  const { data: cashAll } = await sbClient.from('cash_payments').select('*').eq('paid_to_vv', true).order('date', { ascending: false });
-  const { data: vvAll } = await sbClient.from('vv_payments').select('*').eq('receipt_sent', true).order('date', { ascending: false });
-  const cashCompleted = cashAll || [];
-  const vvCompleted = vvAll || [];
-  const viewMode = document.getElementById('records-view')?.value || 'month';
+  const mode = document.getElementById('records-view')?.value || 'month';
 
-  if (viewMode === 'month') {
-    renderRecordsByMonth(el, cashCompleted, vvCompleted);
-  } else {
-    renderRecordsByBatch(el, cashCompleted, vvCompleted);
+  // Completed means:
+  // - cash_payments paid_to_vv = true
+  // - vv_payments receipt_sent = true (if column exists)
+  const cashDone = (cashPayments || []).filter(p => p.paid_to_vv);
+  const vvDone = (vvPayments || []).filter(p => ('receipt_sent' in p) ? p.receipt_sent : false);
+
+  if(mode === 'month'){
+    renderRecordsByMonth(el, cashDone, vvDone);
+  }else{
+    renderRecordsByBatch(el, cashDone, vvDone);
   }
 }
 
-function renderRecordsByMonth(el, cashCompleted, vvCompleted) {
-  // Group by month
-  const months = {};
-  const addToMonth = (date, grossAmount, type) => {
-    const key = date.substring(0, 7); // YYYY-MM
-    if (!months[key]) months[key] = { cash: [], bank: [] };
-    months[key][type].push(grossAmount);
+function renderRecordsByMonth(el, cashDone, vvDone){
+  const months = {}; // YYYY-MM => { cashGross, bankGross }
+  const add = (date, gross, type)=>{
+    const k = String(date||'').slice(0,7);
+    if(!k || k.length!==7) return;
+    if(!months[k]) months[k] = { cashGross:0, bankGross:0 };
+    if(type==='cash') months[k].cashGross += Number(gross||0);
+    if(type==='bank') months[k].bankGross += Number(gross||0);
   };
-  cashCompleted.forEach(p => addToMonth(p.date, Number(p.total), 'cash'));
-  vvCompleted.forEach(p => addToMonth(p.date, Number(p.total), 'bank'));
+  cashDone.forEach(p => add(p.date, p.total, 'cash'));
+  vvDone.forEach(p => add(p.date, p.total, 'bank'));
 
-  const sortedKeys = Object.keys(months).sort((a,b) => a < b ? 1 : -1);
-  if (!sortedKeys.length) {
-    el.innerHTML = `<div class="empty-state"><div class="icon">📁</div>No completed records yet<div class="action-hint">Records appear here once cash payments are marked paid to VV, and bank transfers have receipts sent</div></div>`;
+  const keys = Object.keys(months).sort((a,b)=> a < b ? 1 : -1);
+  if(!keys.length){
+    el.innerHTML = `<div class="empty-state"><div class="icon">📁</div>No completed records yet
+      <div class="small-note" style="margin-top:0.6rem">Records appear once cash batches are marked <strong>paid to VV</strong> and bank transfers are marked <strong>receipt sent</strong>.</div>
+    </div>`;
     return;
   }
 
-  el.innerHTML = sortedKeys.map(key => {
-    const m = months[key];
-    const cashGross = m.cash.reduce((s,v)=>s+v, 0);
-    const bankGross = m.bank.reduce((s,v)=>s+v, 0);
-    const totalNet = NET(cashGross + bankGross);
-    const label = fmtMonth(key + '-01');
+  el.innerHTML = keys.map(k=>{
+    const m = months[k];
+    const net = NET(m.cashGross + m.bankGross);
+    const cashNet = NET(m.cashGross);
+    const bankNet = NET(m.bankGross);
+
     return `<div class="card" style="margin-bottom:0.75rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-        <div style="font-weight:700;font-size:1rem">${label}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:1rem;font-weight:500;color:var(--green)">₪${Math.round(totalNet)} <span style="font-size:0.7rem;color:var(--text-muted);font-family:'DM Sans',sans-serif">net</span></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap">
+        <div style="font-weight:900; font-size:1.02rem">${k}</div>
+        <div style="font-family:'DM Mono',monospace; font-size:1.05rem; font-weight:500; color:var(--green)">
+          ${fmtMoney(net)} <span class="small-note" style="margin-left:0.35rem">net</span>
+        </div>
       </div>
-      <div style="display:flex;gap:1.5rem;font-size:0.8rem;color:var(--text-muted)">
-        ${cashGross > 0 ? `<span>💵 Cash: ₪${Math.round(NET(cashGross))} net</span>` : ''}
-        ${bankGross > 0 ? `<span>🏦 Bank: ₪${Math.round(NET(bankGross))} net</span>` : ''}
+      <div class="small-note" style="margin-top:0.5rem; display:flex; gap:1.25rem; flex-wrap:wrap">
+        ${m.cashGross>0 ? `<span>💵 Cash: <strong>${fmtMoney(cashNet)}</strong> net</span>` : `<span>💵 Cash: —</span>`}
+        ${m.bankGross>0 ? `<span>🏦 Bank: <strong>${fmtMoney(bankNet)}</strong> net</span>` : `<span>🏦 Bank: —</span>`}
       </div>
     </div>`;
   }).join('');
 }
 
-function renderRecordsByBatch(el, cashCompleted, vvCompleted) {
-  // Combine and sort by date
+function renderRecordsByBatch(el, cashDone, vvDone){
   const all = [
-    ...cashCompleted.map(p => ({ ...p, _type: 'cash' })),
-    ...vvCompleted.map(p => ({ ...p, _type: 'bank' }))
-  ].sort((a,b) => a.date < b.date ? 1 : -1);
+    ...cashDone.map(p => ({...p, _type:'cash'})),
+    ...vvDone.map(p => ({...p, _type:'bank'})),
+  ].sort((a,b)=> String(a.date||'') < String(b.date||'') ? 1 : -1);
 
-  if (!all.length) {
+  if(!all.length){
     el.innerHTML = `<div class="empty-state"><div class="icon">📁</div>No completed records yet</div>`;
     return;
   }
 
   el.innerHTML = `<div class="table-wrap"><table>
     <thead><tr><th>Date</th><th>Type</th><th>Details</th><th>Gross</th><th>Net (85%)</th></tr></thead>
-    <tbody>${all.map(p => {
-      const typeLabel = p._type === 'cash'
-        ? '<span class="badge badge-cash">Cash</span>'
-        : '<span class="badge badge-bank">Bank</span>';
-      let detail = `${p.session_ids.length} session${p.session_ids.length !== 1 ? 's' : ''}`;
-      if (p._type === 'bank') {
-        const names = [...new Set(p.session_ids.map(sid => {
-          const s = sessions.find(x => x.id === sid);
-          return s ? clientName(s.client_id) : null;
-        }).filter(Boolean))].join(', ');
-        if (names) detail = names + ` (${p.session_ids.length})`;
-      }
-      return `<tr>
-        <td style="font-family:'DM Mono',monospace;font-size:0.77rem;color:var(--text-muted)">${fmtDate(p.date)}</td>
-        <td>${typeLabel}</td>
-        <td style="font-size:0.82rem">${detail}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(Number(p.total))}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">₪${Math.round(NET(Number(p.total)))}</td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
+    <tbody>
+      ${all.map(p=>{
+        const typeBadge = p._type==='cash' ? '<span class="badge badge-cash">Cash</span>' : '<span class="badge badge-bank">Bank</span>';
+        const ids = p.session_ids || [];
+        let detail = `${ids.length} session${ids.length!==1?'s':''}`;
+        if(p._type==='bank'){
+          const names = [...new Set(ids.map(sid=>{
+            const s = sessions.find(x=>x.id===sid);
+            return s ? clientName(s.client_id) : null;
+          }).filter(Boolean))].join(', ');
+          if(names) detail = `${names} (${ids.length})`;
+        }
+        return `<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-muted)">${fmtDate(p.date)}</td>
+          <td>${typeBadge}</td>
+          <td style="font-size:0.84rem">${detail}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem">₪${Math.round(Number(p.total||0))}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">${fmtMoney(NET(Number(p.total||0)))}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 
-// ─── Toast ───────────────────────────────────────────────────
-function toast(msg, type = '') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast' + (type ? ' ' + type : '');
-  el.classList.add('show');
-  setTimeout(() => { el.classList.remove('show'); el.classList.remove('clickable'); }, 3000);
+// ─── Archive ────────────────────────────────────────────────
+function renderArchive(){
+  document.getElementById('archive-month-title').textContent = monthTitle(archiveMonth);
+
+  // Month-filter table
+  const monthKey = ym(archiveMonth);
+  const monthSessions = sessions.filter(s => String(s.date||'').slice(0,7) === monthKey);
+
+  const monthHost = document.getElementById('archive-month-table');
+  monthHost.innerHTML = renderSessionTableHTML(monthSessions, true);
+
+  // All-time table
+  const allHost = document.getElementById('archive-all-table');
+  allHost.innerHTML = renderSessionTableHTML(sessions, false);
+}
+
+function renderSessionTableHTML(list, includeMonthSummary){
+  if(!list.length){
+    return `<div class="empty-state" style="padding:1.25rem"><div class="icon">📦</div>No sessions here</div>`;
+  }
+
+  // Summary (month only)
+  let summaryHtml = '';
+  if(includeMonthSummary){
+    let happenedNet = 0, scheduledNet = 0, paidNet = 0;
+    let happenedCount=0, scheduledCount=0, paidCount=0;
+
+    for(const s of list){
+      const net = NET(clientRate(s.client_id));
+      const st = getSessionState(s);
+      if(st==='scheduled'){ scheduledNet += net; scheduledCount++; }
+      if(st==='happened'){ happenedNet += net; happenedCount++; }
+      if(st==='paid'){ paidNet += net; paidCount++; }
+    }
+    summaryHtml = `
+      <div class="summary-box" style="margin-bottom:0.9rem">
+        <div class="item"><span>Scheduled</span><strong>${scheduledCount} · ${fmtMoney(scheduledNet)}</strong></div>
+        <div class="item"><span>Happened unpaid</span><strong>${happenedCount} · ${fmtMoney(happenedNet)}</strong></div>
+        <div class="item"><span>Paid</span><strong>${paidCount} · ${fmtMoney(paidNet)}</strong></div>
+      </div>`;
+  }
+
+  // table
+  return summaryHtml + `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Date</th><th>Client</th><th>Type</th><th>Rate</th><th>Net</th><th>State</th>
+    </tr></thead>
+    <tbody>
+      ${list.map(s=>{
+        const c = clientById(s.client_id);
+        const st = getSessionState(s);
+
+        const typeBadge = c
+          ? (c.type==='cash' ? '<span class="badge badge-cash">Cash</span>' : '<span class="badge badge-bank">Bank</span>')
+          : '';
+
+        const stateBadge =
+          st==='paid' ? '<span class="badge badge-green">Paid</span>' :
+          st==='scheduled' ? '<span class="badge badge-scheduled">Scheduled</span>' :
+          '<span class="badge badge-amber">Happened (unpaid)</span>';
+
+        return `<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-muted)">${fmtDate(s.date)}</td>
+          <td><strong>${c ? c.name : '—'}</strong></td>
+          <td>${typeBadge}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem">${c ? '₪'+Math.round(Number(c.rate||0)) : '—'}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--green)">${c ? fmtMoney(NET(c.rate)) : '—'}</td>
+          <td>${stateBadge}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 </script>
 </body>
