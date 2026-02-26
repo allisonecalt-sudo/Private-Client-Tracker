@@ -3,258 +3,190 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Practice Tracker Pro</title>
+<title>Practice Pro Tracker</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f8f9fa; --surface: #ffffff; --surface2: #f1f3f5; --border: #e9ecef;
-  --text: #212529; --text-muted: #6c757d; --accent: #2d6a4f; --accent-soft: rgba(45,106,79,0.1);
-  --green: #2d6a4f; --amber: #d9480f; --red: #c92a2a; --blue: #1971c2;
-  --radius: 12px; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  --bg: #f8f9fa; --surface: #ffffff; --border: #eef0f2;
+  --text: #1a1c1e; --text-muted: #64748b;
+  --primary: #2d6a4f; --primary-light: #d8f3dc;
+  --danger: #ef4444; --warning: #f59e0b; --success: #10b981;
+  --radius: 16px; --shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; font-size: 15px; }
-.app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
-.main { max-width: 800px; margin: 0 auto; padding: 1.5rem; padding-bottom: 100px; }
-.card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
-.tab-content { display: none; animation: fadeIn 0.2s ease-out; }
-.tab-content.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'DM Sans', sans-serif; }
+body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
 
-/* UI Components */
-.btn { padding: 0.6rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-family: inherit; display: inline-flex; align-items: center; gap: 0.5rem; }
-.btn-primary { background: var(--accent); color: white; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-.btn-danger { background: #fff5f5; color: var(--red); }
-.badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-.badge-cash { background: #e7f5ff; color: var(--blue); }
-.badge-bank { background: #ebfbee; color: var(--green); }
-.badge-archived { background: #f1f3f5; color: var(--text-muted); }
+/* Dashboard Cards */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+.stat-card { background: var(--surface); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
+.stat-card label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card .val { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 600; margin-top: 4px; }
 
-/* Forms */
-.form-group { margin-bottom: 1rem; flex: 1; min-width: 200px; }
-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; }
-input, select { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); font-size: 1rem; outline: none; }
-input:focus { border-color: var(--accent); background: white; }
+/* Better Lists */
+.list-section { padding: 0 16px; }
+.item-row { background: var(--surface); padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border); transition: 0.2s; }
+.item-row:active { transform: scale(0.98); background: var(--bg); }
+.item-info b { display: block; font-size: 15px; }
+.item-info span { font-size: 12px; color: var(--text-muted); }
 
-/* Table */
-.table-wrap { overflow-x: auto; margin: 0 -1.5rem; padding: 0 1.5rem; }
-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-th { text-align: left; padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); border-bottom: 2px solid var(--border); }
-td { padding: 1rem 0.75rem; border-bottom: 1px solid var(--border); }
+/* Sticky Log Bar */
+.quick-log { position: fixed; bottom: 85px; right: 20px; z-index: 100; }
+.fab { width: 56px; height: 56px; border-radius: 28px; background: var(--primary); color: white; border: none; font-size: 24px; box-shadow: 0 4px 12px rgba(45,106,79,0.3); cursor: pointer; }
 
-/* Nav */
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(5, 1fr); padding: 0.5rem; z-index: 1000; }
-.nav-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.65rem; color: var(--text-muted); cursor: pointer; }
-.nav-btn.active { color: var(--accent); }
-.nav-btn span { font-size: 1.2rem; }
+/* Navigation */
+.nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 25px; }
+.nav-item { border: none; background: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 600; gap: 4px; }
+.nav-item.active { color: var(--primary); }
+.nav-item span { font-size: 20px; }
 
-.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 0.75rem 1.5rem; border-radius: 50px; font-size: 0.9rem; z-index: 2000; opacity: 0; transition: 0.3s; pointer-events: none; }
-.toast.show { opacity: 1; bottom: 100px; }
+/* Badges */
+.pill { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.pill-cash { background: #dbeafe; color: #1e40af; }
+.pill-bank { background: #dcfce7; color: #166534; }
+
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1a1c1e; color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; z-index: 9999; display: none; }
 </style>
 </head>
 <body>
 
 <div id="toast" class="toast"></div>
 
-<header class="app-header">
-  <h2 style="font-size: 1.1rem">Practice Tracker</h2>
-  <div id="sync-indicator" style="font-size: 0.7rem; color: var(--green)">● System Ready</div>
-</header>
+<div style="padding: 24px 16px 8px; display: flex; justify-content: space-between; align-items: center;">
+    <h1 style="font-size: 22px; margin: 0;">Dashboard</h1>
+    <div id="status" style="font-size: 10px; color: var(--success); font-weight: 700;">● SYNCED</div>
+</div>
 
-<main class="main">
-  <section id="tab-home" class="tab-content active">
-    <h3 id="dash-month" style="margin-bottom: 1.5rem">...</h3>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-      <div class="card" style="border-top: 4px solid var(--green); margin-bottom: 0;">
-        <label>Net Earned</label>
-        <div id="dash-earned" style="font-size: 1.5rem; font-weight: 700; font-family: 'DM Mono'">₪0</div>
-      </div>
-      <div class="card" style="border-top: 4px solid var(--amber); margin-bottom: 0;">
-        <label>Unpaid</label>
-        <div id="dash-unpaid" style="font-size: 1.5rem; font-weight: 700; font-family: 'DM Mono'">₪0</div>
-      </div>
-    </div>
-    <div id="pending-tasks"></div>
-  </section>
-
-  <section id="tab-sessions" class="tab-content">
-    <div class="card">
-      <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
-        <div class="form-group"><label>Client</label><select id="session-client"></select></div>
-        <div class="form-group"><label>Date</label><input type="date" id="session-date"></div>
-        <div class="form-group"><label>Status</label>
-          <select id="session-status">
-            <option value="happened">✓ Happened</option>
-            <option value="scheduled">◷ Scheduled</option>
-          </select>
+<div id="content">
+    <div id="tab-home" class="tab-page">
+        <div class="stat-grid">
+            <div class="stat-card" style="border-left: 4px solid var(--primary)">
+                <label>Monthly Take-Home</label>
+                <div class="val" id="net-earned">₪0</div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid var(--warning)">
+                <label>Pending Collection</label>
+                <div class="val" id="net-pending">₪0</div>
+            </div>
         </div>
-      </div>
-      <button class="btn btn-primary" style="width: 100%" onclick="addSession()">Log Session</button>
-    </div>
-    <div id="sessions-list"></div>
-  </section>
-
-  <section id="tab-clients" class="tab-content">
-    <div class="card">
-      <label>Add New Child/Clinic</label>
-      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem">
-        <input type="text" id="client-name" placeholder="Name">
-        <div style="display: flex; gap: 0.75rem">
-          <select id="client-type"><option value="cash">Cash</option><option value="bank">Bank</option></select>
-          <input type="number" id="client-rate" placeholder="Rate (₪)">
+        <div class="list-section">
+            <h3 style="font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Recent Sessions</h3>
+            <div id="recent-sessions"></div>
         </div>
-        <button class="btn btn-primary" onclick="handleClientAdd()">Add Client</button>
-      </div>
     </div>
-    <div id="clients-list"></div>
-  </section>
 
-  <section id="tab-payments" class="tab-content">
-      <div class="card">
-          <h3>Record Payments</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem">Select "Cash" or "Bank" in the records to mark batches as paid.</p>
-          <div id="payment-actions" style="margin-top: 1rem"></div>
-      </div>
-  </section>
-</main>
+    <div id="tab-clients" class="tab-page" style="display:none">
+        <div style="padding: 16px;">
+            <div class="stat-card">
+                <label>Add New Client</label>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <input type="text" id="c-name" placeholder="Name" style="flex:2; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+                    <input type="number" id="c-rate" placeholder="Rate" style="flex:1; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+                    <button onclick="addClient()" class="btn" style="background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0 16px;">+</button>
+                </div>
+                <select id="c-type" style="width:100%; margin-top:8px; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+                    <option value="cash">Cash Payment</option>
+                    <option value="bank">Bank Transfer (VV)</option>
+                </select>
+            </div>
+        </div>
+        <div class="list-section" id="client-list"></div>
+    </div>
+</div>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active" onclick="switchTab('home', this)"><span>🏠</span>Home</button>
-  <button class="nav-btn" onclick="switchTab('sessions', this)"><span>📋</span>Log</button>
-  <button class="nav-btn" onclick="switchTab('clients', this)"><span>👤</span>Clients</button>
-  <button class="nav-btn" onclick="switchTab('payments', this)"><span>💰</span>Pay</button>
+<div class="quick-log">
+    <button class="fab" onclick="showLogModal()">+</button>
+</div>
+
+<nav class="nav-bar">
+    <button class="nav-item active" onclick="nav('home', this)"><span>🏠</span>Home</button>
+    <button class="nav-item" onclick="nav('clients', this)"><span>👤</span>Clients</button>
+    <button class="nav-item" onclick="showLogModal()"><span>📋</span>Log</button>
+    <button class="nav-item" onclick="nav('records', this)"><span>📊</span>Report</button>
 </nav>
 
 <script>
-const VV_CUT = 0.15;
-const NET = (g) => Math.round(Number(g || 0) * 0.85);
-let sbClient, clients = [], sessions = [];
+const VV_CUT = 0.85; // What you keep
+let clients = [], sessions = [];
+const sb = window.supabase.createClient('https://fxpaacqnsbnbzbcabpvi.supabase.co', 'sb_publishable_JTb6iSLPvZVAYhQELImNfQ_4bvD4-Hy');
 
-// INIT
-window.addEventListener('load', () => {
-  sbClient = window.supabase.createClient('https://fxpaacqnsbnbzbcabpvi.supabase.co', 'sb_publishable_JTb6iSLPvZVAYhQELImNfQ_4bvD4-Hy');
-  document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-  loadAll();
-});
-
-async function loadAll() {
-  const { data: c } = await sbClient.from('clients').select('*').order('name');
-  const { data: s } = await sbClient.from('sessions').select('*').order('date', { ascending: false });
-  clients = c || [];
-  sessions = s || [];
-  renderDashboard();
-  renderSessions();
-  renderClients();
-  populateDropdowns();
+async function loadData() {
+    const { data: c } = await sb.from('clients').select('*').order('name');
+    const { data: s } = await sb.from('sessions').select('*').order('date', {ascending: false});
+    clients = c || [];
+    sessions = s || [];
+    render();
 }
 
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  btn.classList.add('active');
+function nav(tab, el) {
+    document.querySelectorAll('.tab-page').forEach(p => p.style.display = 'none');
+    const target = document.getElementById('tab-' + tab);
+    if(target) target.style.display = 'block';
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
 }
 
-function populateDropdowns() {
-  const sel = document.getElementById('session-client');
-  const active = clients.filter(c => c.status !== 'archived');
-  sel.innerHTML = active.map(c => `<option value="${c.id}">${c.name} (₪${c.rate})</option>`).join('');
+function render() {
+    // Dashboard Calcs
+    let earned = 0, pending = 0;
+    sessions.forEach(s => {
+        const c = clients.find(cl => cl.id === s.client_id);
+        if(!c) return;
+        const net = Math.round(c.rate * VV_CUT);
+        if(s.paid) earned += net;
+        else if(s.status === 'happened') pending += net;
+    });
+    document.getElementById('net-earned').innerText = `₪${earned}`;
+    document.getElementById('net-pending').innerText = `₪${pending}`;
+
+    // Session List
+    const sessionHTML = sessions.slice(0, 10).map(s => {
+        const c = clients.find(cl => cl.id === s.client_id);
+        return `
+        <div class="item-row">
+            <div class="item-info">
+                <b>${c ? c.name : 'Unknown'}</b>
+                <span>${new Date(s.date).toLocaleDateString('en-GB')}</span>
+            </div>
+            <div class="pill ${s.paid ? 'pill-bank' : 'pill-cash'}" style="background: ${s.paid ? '#dcfce7' : '#fee2e2'}">
+                ${s.paid ? 'PAID' : 'DUE'}
+            </div>
+        </div>`;
+    }).join('');
+    document.getElementById('recent-sessions').innerHTML = sessionHTML;
+
+    // Client List with Alphabetical Sort & Archive Status
+    const clientHTML = clients.map(c => `
+        <div class="item-row" style="${c.status === 'archived' ? 'opacity:0.5' : ''}">
+            <div class="item-info">
+                <b>${c.name}</b>
+                <span>₪${c.rate} · ${c.type}</span>
+            </div>
+            <button onclick="toggleClient('${c.id}', '${c.status}')" style="border:none; background:none; font-size:18px;">
+                ${c.status === 'active' ? '📂' : '✅'}
+            </button>
+        </div>
+    `).join('');
+    document.getElementById('client-list').innerHTML = clientHTML;
 }
 
-// DASHBOARD LOGIC
-function renderDashboard() {
-  const month = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-  document.getElementById('dash-month').innerText = month;
-  
-  const earned = sessions.filter(s => s.paid).reduce((acc, s) => {
-      const c = clients.find(cl => cl.id === s.client_id);
-      return acc + (c ? NET(c.rate) : 0);
-  }, 0);
-
-  const unpaid = sessions.filter(s => !s.paid && s.status === 'happened').reduce((acc, s) => {
-      const c = clients.find(cl => cl.id === s.client_id);
-      return acc + (c ? NET(c.rate) : 0);
-  }, 0);
-
-  document.getElementById('dash-earned').innerText = `₪${earned}`;
-  document.getElementById('dash-unpaid').innerText = `₪${unpaid}`;
+async function addClient() {
+    const name = document.getElementById('c-name').value;
+    const rate = document.getElementById('c-rate').value;
+    const type = document.getElementById('c-type').value;
+    if(!name || !rate) return;
+    await sb.from('clients').insert([{name, rate, type, status:'active'}]);
+    toast("Client Added");
+    loadData();
 }
 
-// CLIENT LOGIC
-async function handleClientAdd() {
-    const name = document.getElementById('client-name').value;
-    const rate = document.getElementById('client-rate').value;
-    const type = document.getElementById('client-type').value;
-    if(!name || !rate) return showToast("Enter name and rate");
-
-    await sbClient.from('clients').insert([{ name, rate, type, status: 'active' }]);
-    showToast("Client added!");
-    loadAll();
-}
-
-async function toggleArchive(id, currentStatus) {
-    const newStatus = currentStatus === 'active' ? 'archived' : 'active';
-    await sbClient.from('clients').update({ status: newStatus }).eq('id', id);
-    showToast(newStatus === 'archived' ? "Client archived" : "Client activated");
-    loadAll();
-}
-
-async function deleteClient(id) {
-    if(!confirm("Delete client? Past sessions remain but will lose client name info.")) return;
-    await sbClient.from('clients').delete().eq('id', id);
-    loadAll();
-}
-
-function renderClients() {
-    const list = document.getElementById('clients-list');
-    list.innerHTML = `<table>
-        <thead><tr><th>Name</th><th>Rate</th><th>Status</th><th></th></tr></thead>
-        <tbody>${clients.map(c => `
-            <tr style="${c.status === 'archived' ? 'opacity: 0.5' : ''}">
-                <td><strong>${c.name}</strong><br><span class="badge ${c.type === 'cash' ? 'badge-cash' : 'badge-bank'}">${c.type}</span></td>
-                <td>₪${c.rate}</td>
-                <td><button class="btn btn-outline" onclick="toggleArchive('${c.id}', '${c.status}')">${c.status === 'active' ? 'Archive' : 'Activate'}</button></td>
-                <td><button class="btn btn-danger" onclick="deleteClient('${c.id}')">🗑️</button></td>
-            </tr>
-        `).join('')}</tbody>
-    </table>`;
-}
-
-// SESSION LOGIC
-async function addSession() {
-    const client_id = document.getElementById('session-client').value;
-    const date = document.getElementById('session-date').value;
-    const status = document.getElementById('session-status').value;
-    
-    await sbClient.from('sessions').insert([{ client_id, date, status, paid: false }]);
-    showToast("Session logged!");
-    loadAll();
-}
-
-function renderSessions() {
-    const list = document.getElementById('sessions-list');
-    list.innerHTML = `<div class="table-wrap"><table>
-        <thead><tr><th>Client</th><th>Date</th><th>Status</th></tr></thead>
-        <tbody>${sessions.slice(0, 15).map(s => {
-            const c = clients.find(cl => cl.id === s.client_id);
-            return `<tr>
-                <td>${c ? c.name : 'Unknown'}</td>
-                <td style="font-size: 0.8rem">${s.date}</td>
-                <td><span class="badge" style="background: ${s.paid ? '#ebfbee' : '#fff4e6'}; color: ${s.paid ? 'var(--green)' : 'var(--amber)'}">${s.paid ? 'Paid' : (s.status === 'happened' ? 'Unpaid' : 'Scheduled')}</span></td>
-            </tr>`;
-        }).join('')}</tbody>
-    </table></div>`;
-}
-
-function showToast(msg) {
+function toast(msg) {
     const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
+    t.innerText = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
 }
+
+window.onload = loadData;
 </script>
 </body>
 </html>
