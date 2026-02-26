@@ -420,8 +420,12 @@ function showConfigError(msg) { const el = document.getElementById('config-error
 
 window.addEventListener('load', () => {
   applyTheme(localStorage.getItem('theme') || 'light');
-  const url = localStorage.getItem('sb_url'), key = localStorage.getItem('sb_key');
-  if (url && key) { document.getElementById('sb-url').value = url; document.getElementById('sb-key').value = key; initApp(); }
+  const url = 'https://fxpaacqnsbnbzbcabpvi.supabase.co';
+  const key = 'sb_publishable_JTb6iSLPvZVAYhQELImNfQ_4bvD4-Hy';
+  localStorage.setItem('sb_url', url); localStorage.setItem('sb_key', key);
+  document.getElementById('sb-url').value = url;
+  document.getElementById('sb-key').value = key;
+  initApp();
   const t = todayStr();
   ['session-date','cash-payment-date','vv-payment-date'].forEach(id => { const el = document.getElementById(id); if (el) el.value = t; });
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('tab-sessions').classList.contains('active')) addSession(); });
