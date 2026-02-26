@@ -557,7 +557,7 @@
 <div id="toast" class="toast"></div>
 
 <script>
-let supabase;
+let sbClient;
 let clients = [];
 let sessions = [];
 let currentSessionFilter = 'all';
@@ -569,9 +569,9 @@ async function initApp() {
   if (!url || !key) { showConfigError('Both fields required.'); return; }
   showConfigError('Connecting...');
   try {
-    supabase = window.supabase.createClient(url, key);
+    sbClient = window.supabase.createClient(url, key);
     // Test the connection
-    const { data, error } = await supabase.from('clients').select('count', { count: 'exact', head: true });
+    const { data, error } = await sbClient.from('clients').select('count', { count: 'exact', head: true });
     if (error) { showConfigError('Connection failed: ' + error.message); return; }
     localStorage.setItem('sb_url', url);
     localStorage.setItem('sb_key', key);
@@ -622,13 +622,13 @@ async function loadAll() {
 }
 
 async function loadClients() {
-  const { data } = await supabase.from('clients').select('*').order('name');
+  const { data } = await sbClient.from('clients').select('*').order('name');
   clients = data || [];
   populateClientSelects();
 }
 
 async function loadSessions() {
-  const { data } = await supabase.from('sessions').select('*').order('date', { ascending: false });
+  const { data } = await sbClient.from('sessions').select('*').order('date', { ascending: false });
   sessions = data || [];
 }
 
@@ -645,7 +645,7 @@ async function addSession() {
   const date = document.getElementById('session-date').value;
   if (!client_id || !date) { toast('Fill all fields'); return; }
 
-  const { error } = await supabase.from('sessions').insert({ client_id, date, paid: false });
+  const { error } = await sbClient.from('sessions').insert({ client_id, date, paid: false });
   if (error) { toast('Error: ' + error.message); return; }
   toast('Session logged ✓');
   await loadSessions();
@@ -698,7 +698,7 @@ async function addClient() {
   const rate = parseFloat(document.getElementById('client-rate').value);
   if (!name || !rate) { toast('Fill all fields'); return; }
 
-  const { error } = await supabase.from('clients').insert({ name, type, rate });
+  const { error } = await sbClient.from('clients').insert({ name, type, rate });
   if (error) { toast('Error: ' + error.message); return; }
   toast('Client added ✓');
   document.getElementById('client-name').value = '';
@@ -780,14 +780,14 @@ async function recordCashPayment() {
   checked.forEach(cb => total += parseFloat(cb.dataset.rate || 0));
   const vv_owed = total * 0.15;
 
-  const { error } = await supabase.from('cash_payments').insert({
+  const { error } = await sbClient.from('cash_payments').insert({
     date, session_ids, total, vv_owed, paid_to_vv: false,
     client_id: null
   });
   if (error) { toast('Error: ' + error.message); return; }
 
   // Mark sessions as paid
-  await supabase.from('sessions').update({ paid: true }).in('id', session_ids);
+  await sbClient.from('sessions').update({ paid: true }).in('id', session_ids);
 
   toast('Cash payment recorded ✓');
   await loadSessions();
@@ -798,7 +798,7 @@ async function recordCashPayment() {
 
 // ── CASH PAYMENTS LIST ───────────────────────────────────
 async function loadCashPayments() {
-  const { data } = await supabase.from('cash_payments').select('*').order('date', { ascending: false });
+  const { data } = await sbClient.from('cash_payments').select('*').order('date', { ascending: false });
   renderCashPaymentsList(data || []);
 }
 
@@ -833,7 +833,7 @@ function renderCashPaymentsList(payments) {
 }
 
 async function toggleCashPaidVV(id, checked) {
-  await supabase.from('cash_payments').update({ paid_to_vv: checked }).eq('id', id);
+  await sbClient.from('cash_payments').update({ paid_to_vv: checked }).eq('id', id);
   toast(checked ? 'Marked as paid to VV ✓' : 'Marked as pending');
   loadCashPayments();
 }
@@ -889,12 +889,12 @@ async function recordVVPayment() {
   checked.forEach(cb => total += parseFloat(cb.dataset.rate || 0));
   const you_get = total * 0.85;
 
-  const { error } = await supabase.from('vv_payments').insert({
+  const { error } = await sbClient.from('vv_payments').insert({
     date, session_ids, total, you_get
   });
   if (error) { toast('Error: ' + error.message); return; }
 
-  await supabase.from('sessions').update({ paid: true }).in('id', session_ids);
+  await sbClient.from('sessions').update({ paid: true }).in('id', session_ids);
 
   toast('VV payment recorded ✓');
   await loadSessions();
@@ -905,7 +905,7 @@ async function recordVVPayment() {
 
 // ── VV PAYMENTS LIST ─────────────────────────────────────
 async function loadVVPayments() {
-  const { data } = await supabase.from('vv_payments').select('*').order('date', { ascending: false });
+  const { data } = await sbClient.from('vv_payments').select('*').order('date', { ascending: false });
   renderVVPaymentsList(data || []);
 }
 
@@ -940,7 +940,7 @@ function renderVVPaymentsList(payments) {
 }
 
 async function toggleVVReceipt(id, checked) {
-  await supabase.from('vv_payments').update({ receipt_sent: checked }).eq('id', id);
+  await sbClient.from('vv_payments').update({ receipt_sent: checked }).eq('id', id);
   toast(checked ? 'Receipt marked as sent ✓' : 'Marked as not sent');
   loadVVPayments();
 }
