@@ -3,173 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Practice Tracker Pro</title>
+<title>Practice Tracker</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+  /* CLEANER, SOFT FONT */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
   :root {
-    --bg: #f6f7fb; --surface: #ffffff; --surface2: #f1f3f9; --surface3: #e9ecf6;
-    --border: #d9deee; --text: #111827; --text-muted: #4b5563; --text-dim: #6b7280;
-    --accent: #7c3aed; --accent-bright: #6d28d9; --accent-soft: rgba(124,58,237,0.1);
-    --green: #059669; --amber: #d97706; --red: #dc2626;
-    --radius-lg: 18px;
+    --bg: #f8fafc; --surface: #ffffff; --surface2: #f1f5f9;
+    --border: #e2e8f0; --text: #1e293b; --text-muted: #64748b;
+    --accent: #6366f1; --green: #10b981; --amber: #f59e0b;
+    --radius: 12px;
   }
 
   [data-theme="dark"] {
-    --bg: #0f0f13; --surface: #18181f; --surface2: #222230; --surface3: #2a2a38;
-    --border: #2e2e3e; --text: #f0eeff; --text-muted: #7878a0; --text-dim: #4a4a68;
-    --accent: #8b5cf6; --accent-bright: #a78bfa; --accent-soft: rgba(139,92,246,0.12);
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #f8fafc; --text-muted: #94a3b8;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
 
-  .app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.8rem 1.2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-  .header-tabs { display: flex; gap: 0.2rem; overflow-x: auto; }
-  .header-tab-btn { padding: 0.5rem 0.8rem; border: none; background: none; cursor: pointer; border-radius: 8px; font-weight: 600; color: var(--text-muted); white-space: nowrap; font-size: 0.85rem; }
-  .header-tab-btn.active { background: var(--accent-soft); color: var(--accent-bright); }
+  .app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .nav-tabs { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 2px; }
+  .nav-btn { padding: 0.5rem 0.75rem; border: none; background: none; cursor: pointer; border-radius: 8px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+  .nav-btn.active { background: var(--surface2); color: var(--accent); font-weight: 600; }
+
+  .main { padding: 1rem; max-width: 800px; margin: 0 auto; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
   
-  .main { padding: 1rem; max-width: 900px; margin: 0 auto; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; animation: fadeIn 0.2s ease; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+  .stat-card { padding: 1rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem; }
+  .stat-val { font-size: 1.25rem; font-weight: 700; color: var(--text); }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.2rem; position: relative; overflow: hidden; }
-  .stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; }
-  .stat-value { font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; }
-  .stat-sub { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.3rem; }
+  .badge { padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+  .badge-scheduled { background: #e0e7ff; color: #4338ca; }
+  .badge-happened { background: #fef3c7; color: #b45309; }
+  .badge-paid { background: #d1fae5; color: #065f46; }
 
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; padding: 0.8rem; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-  td { padding: 0.8rem; border-bottom: 1px solid var(--border); }
-  
-  .btn { padding: 0.6rem 1rem; border-radius: 10px; cursor: pointer; font-weight: 600; border: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: 0.15s; font-size: 0.85rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  th { text-align: left; font-size: 0.75rem; color: var(--text-muted); padding: 0.75rem; border-bottom: 1px solid var(--border); }
+  td { padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+
+  .btn { padding: 0.6rem 1rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
   .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:active { transform: scale(0.96); }
-  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-  .btn-ghost { background: transparent; color: var(--text-muted); }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
   
-  input, select { padding: 0.7rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none; }
+  input, select { padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border); width: 100%; font-family: inherit; }
 
-  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #111827; color: white; padding: 0.8rem 1.5rem; border-radius: 50px; display: none; z-index: 1000; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 0.75rem 1.5rem; border-radius: 50px; display: none; z-index: 1000; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
   .toast.show { display: block; }
 
-  .toggle { position: relative; width: 36px; height: 20px; cursor: pointer; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 20px; transition: 0.2s; }
-  .toggle-slider::before { content: ""; position: absolute; height: 14px; width: 14px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
-  input:checked + .toggle-slider { background: var(--green); }
-  input:checked + .toggle-slider::before { transform: translateX(16px); }
-
-  .month-group { margin-top: 1.5rem; }
-  .month-header { font-size: 0.9rem; font-weight: 700; color: var(--accent); border-bottom: 2px solid var(--accent-soft); padding-bottom: 0.3rem; margin-bottom: 0.8rem; }
-
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 </style>
 </head>
 <body>
 
-<div id="config-screen" style="display:none; height:100vh; align-items:center; justify-content:center; padding: 1rem;">
-  <div class="card" style="width:100%; max-width:350px;">
-    <h2 style="text-align:center">Connect</h2>
-    <p style="margin: 0.8rem 0; text-align:center; color:var(--text-muted)">Connect your personal database.</p>
-    <input type="text" id="sb-url" placeholder="Supabase URL" style="width:100%; margin-bottom:0.8rem">
-    <input type="text" id="sb-key" placeholder="Anon Key" style="width:100%; margin-bottom:0.8rem">
-    <button class="btn btn-primary" style="width:100%; justify-content:center" onclick="initApp()">Connect →</button>
-  </div>
-</div>
-
-<div id="app" style="display:none">
+<div id="app">
   <header class="app-header">
-    <div class="header-tabs">
-      <button class="header-tab-btn active" onclick="switchTab('home')">Home</button>
-      <button class="header-tab-btn" onclick="switchTab('sessions')">Sessions</button>
-      <button class="header-tab-btn" onclick="switchTab('clients')">Clients</button>
-      <button class="header-tab-btn" onclick="switchTab('cash')">Cash</button>
-      <button class="header-tab-btn" onclick="switchTab('bank')">Bank</button>
-      <button class="header-tab-btn" onclick="switchTab('records')">Records</button>
+    <div class="nav-tabs">
+      <button class="nav-btn active" onclick="switchTab('home')">Home</button>
+      <button class="nav-btn" onclick="switchTab('sessions')">Sessions</button>
+      <button class="nav-btn" onclick="switchTab('clients')">Clients</button>
+      <button class="nav-btn" onclick="switchTab('bank')">Money</button>
+      <button class="nav-btn" onclick="switchTab('records')">History</button>
     </div>
-    <button class="btn btn-ghost" id="theme-toggle" onclick="toggleTheme()" style="padding:0.4rem">☀️</button>
+    <button onclick="toggleTheme()" style="background:none; border:none; cursor:pointer; font-size:1.2rem">🌓</button>
   </header>
 
   <main class="main">
     <div id="tab-home" class="tab-content active">
-      <h2 style="margin-bottom:1rem">Overview</h2>
+      <h2 style="margin-bottom:1rem; font-size:1.25rem">Trajectory (Net 85%)</h2>
       <div class="stats-grid" id="dash-stats"></div>
       <div class="card">
-        <h3 style="font-size:1rem">Pending Tasks</h3>
-        <div id="dash-actions" style="margin-top:0.8rem; font-size:0.85rem"></div>
+        <h3 style="font-size:0.9rem; margin-bottom:0.5rem">Next Actions</h3>
+        <div id="dash-actions" style="font-size:0.85rem; color:var(--text-muted)"></div>
       </div>
     </div>
 
     <div id="tab-sessions" class="tab-content">
       <div class="card">
-        <h3>Log Session</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-top:0.8rem">
+        <h3 style="margin-bottom:1rem">New Session</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:0.5rem">
           <select id="s-client"></select>
           <input type="date" id="s-date">
         </div>
-        <button class="btn btn-primary" onclick="addSession()" style="width:100%; margin-top:0.8rem; justify-content:center">+ Add Session</button>
+        <select id="s-status" style="margin-bottom:0.8rem">
+          <option value="scheduled">Scheduled (Potential)</option>
+          <option value="happened">Happened (Confirming Session)</option>
+        </select>
+        <button class="btn btn-primary" style="width:100%" onclick="addSession()">Log Session</button>
       </div>
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem">
-          <h3>Recent</h3>
-          <select id="s-sort" onchange="renderSessions()" style="font-size:0.75rem; width:auto">
-            <option value="date_desc">Newest</option>
-            <option value="unpaid">Unpaid First</option>
-          </select>
-        </div>
-        <div id="sessions-table" style="font-size:0.85rem"></div>
+        <div id="sessions-list"></div>
       </div>
     </div>
 
-    <div id="tab-cash" class="tab-content">
-      <div class="card">
-        <h3>Cash Inbound</h3>
-        <div id="cash-picker" style="margin:0.8rem 0"></div>
-        <div id="cash-summary" style="padding:0.8rem; background:var(--surface2); border-radius:10px; margin-bottom:0.8rem; display:none; font-size:0.85rem"></div>
-        <button class="btn btn-primary" onclick="batchCash()" style="width:100%; justify-content:center">Record Payment</button>
-      </div>
-      <div class="card">
-        <h3 style="color:var(--amber)">Owed to VV (15%)</h3>
-        <div id="cash-pending-list" style="margin-top:0.8rem; font-size:0.85rem"></div>
-      </div>
-    </div>
-
-    <div id="tab-bank" class="tab-content">
-      <div class="card">
-        <h3>Bank Transfer Inbound</h3>
-        <div id="bank-picker" style="margin:0.8rem 0"></div>
-        <div id="bank-summary" style="padding:0.8rem; background:var(--surface2); border-radius:10px; margin-bottom:0.8rem; display:none; font-size:0.85rem"></div>
-        <button class="btn btn-primary" onclick="batchBank()" style="width:100%; justify-content:center">Record Received</button>
-      </div>
-      <div class="card">
-        <h3 style="color:var(--accent)">Needs Receipt</h3>
-        <div id="bank-pending-list" style="margin-top:0.8rem; font-size:0.85rem"></div>
-      </div>
-    </div>
-
-    <div id="tab-records" class="tab-content">
-        <div class="card">
-            <h3>Settled History</h3>
-            <div id="records-list"></div>
-        </div>
-    </div>
-
-    <div id="tab-clients" class="tab-content">
-        <div class="card">
-            <h3>New Client</h3>
-            <input type="text" id="c-name" placeholder="Name" style="margin-top:0.8rem; width:100%">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-top:0.5rem">
-                <select id="c-type"><option value="cash">Cash</option><option value="vv">Bank</option></select>
-                <input type="number" id="c-rate" placeholder="Rate (₪)">
-            </div>
-            <button class="btn btn-primary" onclick="addClient()" style="width:100%; margin-top:0.8rem; justify-content:center">Add Client</button>
-        </div>
-        <div class="card" id="clients-list"></div>
-    </div>
+    <div id="tab-clients" class="tab-content"><div class="card" id="clients-list"></div></div>
+    <div id="tab-bank" class="tab-content"><div class="card" id="bank-list"></div></div>
+    <div id="tab-records" class="tab-content"><div class="card" id="records-list"></div></div>
   </main>
 </div>
 
@@ -180,25 +114,12 @@ let sb, clients=[], sessions=[], lastDeleted=null, undoTimer=null;
 const VV_CUT = 0.15;
 const NET = (gross) => Number(gross || 0) * (1 - VV_CUT);
 
-function fmtM(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleString('default', { month: 'long', year: 'numeric' });
-}
-
 async function initApp() {
-    const url = document.getElementById('sb-url').value || localStorage.getItem('sb_url');
-    const key = document.getElementById('sb-key').value || localStorage.getItem('sb_key');
-    if(!url || !key) { document.getElementById('config-screen').style.display='flex'; return; }
+    const url = localStorage.getItem('sb_url');
+    const key = localStorage.getItem('sb_key');
+    if(!url || !key) return; // Add login logic here if needed
     
     sb = supabase.createClient(url, key);
-    const { error } = await sb.from('clients').select('id', { count: 'exact', head: true });
-    if(error) { localStorage.clear(); location.reload(); return; }
-
-    localStorage.setItem('sb_url', url); localStorage.setItem('sb_key', key);
-    document.getElementById('config-screen').style.display='none';
-    document.getElementById('app').style.display='block';
-    
-    applyTheme(localStorage.getItem('theme') || 'light');
     loadData();
 }
 
@@ -211,32 +132,21 @@ async function loadData() {
 }
 
 function renderAll() {
-    const cur = document.querySelector('.header-tab-btn.active').getAttribute('onclick').match(/'([^']+)'/)[1];
-    populateClientSelect();
     renderDashboard();
-    if(cur === 'sessions') renderSessions();
-    if(cur === 'clients') renderClients();
-    if(cur === 'cash') renderCashTab();
-    if(cur === 'bank') renderBankTab();
-    if(cur === 'records') renderRecords();
+    renderSessions();
+    populateClientSelect();
 }
 
 function switchTab(t) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.header-tab-btn').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('tab-'+t).classList.add('active');
     event.currentTarget.classList.add('active');
-    renderAll();
 }
 
 function toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme') || 'light';
-    applyTheme(current === 'light' ? 'dark' : 'light');
-}
-function applyTheme(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('theme', t);
-    document.getElementById('theme-toggle').textContent = t === 'light' ? '☀️' : '🌙';
+    const cur = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
 }
 
 function renderDashboard() {
@@ -244,220 +154,73 @@ function renderDashboard() {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     const monthSessions = sessions.filter(s => s.date >= startOfMonth);
     
-    let received = 0, outstanding = 0;
+    let received = 0, outstanding = 0, projected = 0;
+
     monthSessions.forEach(s => {
         const c = clients.find(cl => cl.id === s.client_id);
         if(!c) return;
-        if(s.paid) received += NET(c.rate);
-        else outstanding += NET(c.rate);
+        const netVal = NET(c.rate);
+
+        if(s.status === 'paid') received += netVal;
+        else if(s.status === 'happened') outstanding += netVal;
+        else if(s.status === 'scheduled') projected += netVal;
     });
 
     document.getElementById('dash-stats').innerHTML = `
-        <div class="stat-card" style="border-bottom: 3px solid var(--green)">
-            <div class="stat-label">Received (Net)</div>
-            <div class="stat-value">₪${Math.round(received)}</div>
-            <div class="stat-sub">This month</div>
+        <div class="stat-card">
+            <div class="stat-label">Received</div>
+            <div class="stat-val">₪${Math.round(received)}</div>
         </div>
         <div class="stat-card" style="border-bottom: 3px solid var(--amber)">
             <div class="stat-label">Outstanding</div>
-            <div class="stat-value">₪${Math.round(outstanding)}</div>
-            <div class="stat-sub">Pending collection</div>
+            <div class="stat-val">₪${Math.round(outstanding)}</div>
         </div>
-        <div class="stat-card" style="background: var(--accent-soft)">
+        <div class="stat-card" style="background: #f1f5f9">
             <div class="stat-label">Projected</div>
-            <div class="stat-value">₪${Math.round(received + outstanding)}</div>
-            <div class="stat-sub">Month trajectory</div>
+            <div class="stat-val">₪${Math.round(projected)}</div>
         </div>
     `;
-
-    const tasks = [];
-    const unpaidCash = sessions.filter(s => !s.paid && clients.find(c=>c.id===s.client_id)?.type==='cash').length;
-    const unpaidBank = sessions.filter(s => !s.paid && clients.find(c=>c.id===s.client_id)?.type==='vv').length;
-    if(unpaidCash > 0) tasks.push(`💰 <b>${unpaidCash}</b> cash sessions to record.`);
-    if(unpaidBank > 0) tasks.push(`🏦 <b>${unpaidBank}</b> bank sessions pending.`);
     
-    document.getElementById('dash-actions').innerHTML = tasks.length ? tasks.join('<br>') : "✅ All caught up!";
+    document.getElementById('dash-actions').innerHTML = `
+        Total Value this month: <b>₪${Math.round(received + outstanding + projected)}</b>
+    `;
 }
 
 function renderSessions() {
-    const sort = document.getElementById('s-sort').value;
-    let list = [...sessions];
-    if(sort==='unpaid') list.sort((a,b) => a.paid - b.paid);
-
-    let html = `<table><thead><tr><th>Date</th><th>Client</th><th>Net</th><th></th></tr></thead><tbody>`;
-    list.slice(0, 50).forEach(s => {
+    let html = `<table><thead><tr><th>Date</th><th>Client</th><th>Status</th><th></th></tr></thead><tbody>`;
+    sessions.slice(0, 20).forEach(s => {
         const c = clients.find(cl => cl.id === s.client_id);
+        const statusClass = 'badge-' + (s.status || 'scheduled');
         html += `<tr>
-            <td style="font-size:0.75rem">${s.date.split('-').slice(1).reverse().join('/')}</td>
-            <td><b>${c?c.name:'?'}</b><br><span style="font-size:0.65rem; color:${s.paid?'var(--green)':'var(--amber)'}">${s.paid?'Paid':'Unpaid'}</span></td>
-            <td>₪${c?NET(c.rate).toFixed(0):0}</td>
-            <td style="text-align:right"><button class="btn btn-ghost" onclick="softDeleteSession('${s.id}')">🗑️</button></td>
+            <td>${s.date.split('-').reverse().slice(0,2).join('/')}</td>
+            <td><b>${c?c.name:'?'}</b></td>
+            <td><span class="badge ${statusClass}">${s.status}</span></td>
+            <td style="text-align:right">
+                ${s.status === 'scheduled' ? `<button class="btn btn-ghost" style="padding:0.2rem 0.5rem; font-size:0.7rem" onclick="markHappened('${s.id}')">✓</button>` : ''}
+                <button class="btn btn-ghost" style="padding:0.2rem 0.5rem" onclick="softDelete('${s.id}')">🗑️</button>
+            </td>
         </tr>`;
     });
-    document.getElementById('sessions-table').innerHTML = html + `</tbody></table>`;
+    document.getElementById('sessions-list').innerHTML = html + `</tbody></table>`;
+}
+
+async function markHappened(id) {
+    await sb.from('sessions').update({ status: 'happened' }).eq('id', id);
+    loadData();
 }
 
 async function addSession() {
     const client_id = document.getElementById('s-client').value;
     const date = document.getElementById('s-date').value;
+    const status = document.getElementById('s-status').value;
     if(!client_id || !date) return;
-    await sb.from('sessions').insert({ client_id, date, paid: false });
+    await sb.from('sessions').insert({ client_id, date, status });
     loadData();
 }
-
-async function softDeleteSession(id) {
-    const s = sessions.find(x => x.id === id);
-    lastDeleted = s;
-    sessions = sessions.filter(x => x.id !== id);
-    renderSessions();
-    const t = document.getElementById('toast');
-    t.innerHTML = `Deleted ${clients.find(c=>c.id===s.client_id)?.name} — <b>Undo</b>`;
-    t.classList.add('show');
-    clearTimeout(undoTimer);
-    undoTimer = setTimeout(async () => {
-        t.classList.remove('show');
-        if(lastDeleted) await sb.from('sessions').delete().eq('id', id);
-        lastDeleted = null;
-    }, 4000);
-}
-
-function undoDelete() {
-    if(!lastDeleted) return;
-    clearTimeout(undoTimer);
-    sessions.push(lastDeleted);
-    sessions.sort((a,b) => b.date.localeCompare(a.date));
-    lastDeleted = null;
-    document.getElementById('toast').classList.remove('show');
-    renderSessions();
-}
-
-function renderCashTab() {
-    const unpaid = sessions.filter(s => !s.paid && clients.find(c => c.id === s.client_id)?.type === 'cash');
-    let html = '';
-    unpaid.forEach(s => {
-        const c = clients.find(cl => cl.id === s.client_id);
-        html += `<label style="display:flex; justify-content:space-between; padding:0.6rem; border-bottom:1px solid var(--border)">
-            <span><input type="checkbox" class="cash-cb" value="${s.id}" data-rate="${c.rate}" onchange="updateCashBatch()"> ${c.name}</span>
-            <span style="color:var(--text-dim)">${s.date}</span>
-        </label>`;
-    });
-    document.getElementById('cash-picker').innerHTML = html || '<p style="color:var(--text-dim)">No unpaid cash sessions.</p>';
-
-    sb.from('cash_payments').select('*').eq('paid_to_vv', false).then(({data}) => {
-        let bHtml = '';
-        data?.forEach(b => {
-            bHtml += `<div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid var(--border)">
-                <span>${b.date}<br><b>₪${b.vv_owed}</b> owed</span>
-                <label class="toggle"><input type="checkbox" onchange="toggleCashVV('${b.id}', true)"><span class="toggle-slider"></span></label>
-            </div>`;
-        });
-        document.getElementById('cash-pending-list').innerHTML = bHtml || 'None pending.';
-    });
-}
-
-function updateCashBatch() {
-    let total = 0;
-    document.querySelectorAll('.cash-cb:checked').forEach(cb => total += Number(cb.dataset.rate));
-    const el = document.getElementById('cash-summary');
-    el.style.display = total > 0 ? 'block' : 'none';
-    el.innerHTML = `Net Earning: <b>₪${Math.round(NET(total))}</b><br>Owe VV (15%): ₪${Math.round(total*VV_CUT)}`;
-}
-
-async function batchCash() {
-    const items = Array.from(document.querySelectorAll('.cash-cb:checked'));
-    if(!items.length) return;
-    const ids = items.map(cb => cb.value);
-    const total = items.reduce((a,b)=>a+Number(b.dataset.rate), 0);
-    await sb.from('cash_payments').insert({ date: new Date().toISOString().split('T')[0], session_ids: ids, total, vv_owed: total*VV_CUT, paid_to_vv: false });
-    await sb.from('sessions').update({ paid: true }).in('id', ids);
-    loadData();
-}
-
-function renderBankTab() {
-    const unpaid = sessions.filter(s => !s.paid && clients.find(c => c.id === s.client_id)?.type === 'vv');
-    let html = '';
-    unpaid.forEach(s => {
-        const c = clients.find(cl => cl.id === s.client_id);
-        html += `<label style="display:flex; justify-content:space-between; padding:0.6rem; border-bottom:1px solid var(--border)">
-            <span><input type="checkbox" class="bank-cb" value="${s.id}" data-rate="${c.rate}" onchange="updateBankBatch()"> ${c.name}</span>
-            <span style="color:var(--text-dim)">${s.date}</span>
-        </label>`;
-    });
-    document.getElementById('bank-picker').innerHTML = html || '<p style="color:var(--text-dim)">No pending transfers.</p>';
-
-    sb.from('vv_payments').select('*').eq('receipt_sent', false).then(({data}) => {
-        let bHtml = '';
-        data?.forEach(b => {
-            bHtml += `<div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid var(--border)">
-                <span>${b.date}<br><b>₪${b.you_get}</b> received</span>
-                <label class="toggle"><input type="checkbox" onchange="toggleVVReceipt('${b.id}', true)"><span class="toggle-slider"></span></label>
-            </div>`;
-        });
-        document.getElementById('bank-pending-list').innerHTML = bHtml || 'None pending.';
-    });
-}
-
-function updateBankBatch() {
-    let total = 0;
-    document.querySelectorAll('.bank-cb:checked').forEach(cb => total += Number(cb.dataset.rate));
-    const el = document.getElementById('bank-summary');
-    el.style.display = total > 0 ? 'block' : 'none';
-    el.innerHTML = `Transfer Amount (85%): <b>₪${Math.round(NET(total))}</b>`;
-}
-
-async function batchBank() {
-    const items = Array.from(document.querySelectorAll('.bank-cb:checked'));
-    if(!items.length) return;
-    const ids = items.map(cb => cb.value);
-    const total = items.reduce((a,b)=>a+Number(b.dataset.rate), 0);
-    await sb.from('vv_payments').insert({ date: new Date().toISOString().split('T')[0], session_ids: ids, total, you_get: NET(total), receipt_sent: false });
-    await sb.from('sessions').update({ paid: true }).in('id', ids);
-    loadData();
-}
-
-async function renderRecords() {
-    const {data: cp} = await sb.from('cash_payments').select('*').eq('paid_to_vv', true).order('date', {ascending:false});
-    const {data: vp} = await sb.from('vv_payments').select('*').eq('receipt_sent', true).order('date', {ascending:false});
-    
-    const all = [...(cp||[]).map(x=>({...x, type:'Cash'})), ...(vp||[]).map(x=>({...x, type:'Bank'}))];
-    all.sort((a,b) => b.date.localeCompare(a.date));
-
-    let html = '', lastMonth = '';
-    all.forEach(p => {
-        const m = fmtM(p.date);
-        if(m !== lastMonth) { html += `<div class="month-header">${m}</div>`; lastMonth = m; }
-        html += `<div style="font-size:0.8rem; padding:0.4rem 0; display:flex; justify-content:space-between">
-            <span>${p.type} Batch</span>
-            <b>₪${p.type==='Cash' ? Math.round(NET(p.total)) : Math.round(p.you_get)}</b>
-        </div>`;
-    });
-    document.getElementById('records-list').innerHTML = html || 'No settled history.';
-}
-
-async function toggleCashVV(id, val) { await sb.from('cash_payments').update({paid_to_vv: val}).eq('id', id); loadData(); }
-async function toggleVVReceipt(id, val) { await sb.from('vv_payments').update({receipt_sent: val}).eq('id', id); loadData(); }
 
 function populateClientSelect() {
     const el = document.getElementById('s-client');
-    if(el) el.innerHTML = clients.map(c => `<option value="${c.id}">${c.name} (₪${c.rate})</option>`).join('');
-}
-
-function renderClients() {
-    let html = '<table>';
-    clients.forEach(c => {
-        html += `<tr><td><b>${c.name}</b></td><td style="font-size:0.7rem; color:var(--text-dim)">${c.type.toUpperCase()}</td><td>₪${c.rate}</td></tr>`;
-    });
-    document.getElementById('clients-list').innerHTML = html + '</table>';
-}
-
-async function addClient() {
-    const name = document.getElementById('c-name').value;
-    const type = document.getElementById('c-type').value;
-    const rate = document.getElementById('c-rate').value;
-    if(!name || !rate) return;
-    await sb.from('clients').insert({ name, type, rate });
-    document.getElementById('c-name').value = ''; document.getElementById('c-rate').value = '';
-    loadData();
+    if(el) el.innerHTML = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
 window.onload = initApp;
