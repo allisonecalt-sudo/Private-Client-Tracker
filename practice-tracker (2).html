@@ -351,7 +351,7 @@ tbody tr:hover td { background: var(--surface2); }
           <button class="btn btn-primary" onclick="recordVVPayment()">Record Payment</button>
         </div>
       </div>
-      <div class="section-divider"><span>Needs receipt</span></div>
+      <div class="section-divider"><span>All bank transfers</span></div>
       <div id="bank-needs-receipt"><div class="skeleton skeleton-row"></div></div>
     </div>
 
@@ -794,16 +794,15 @@ async function loadVVPayments() {
 }
 function renderBankNeedsReceipt(payments) {
   const el = document.getElementById('bank-needs-receipt');
-  const pending = payments.filter(p => !p.receipt_sent);
-  if (!pending.length) { el.innerHTML = `<div class="card"><div class="empty-state" style="padding:1.25rem"><div class="icon">✅</div>No receipts pending</div></div>`; return; }
-  el.innerHTML = pending.map(p => {
+  if (!payments.length) { el.innerHTML = `<div class="card"><div class="empty-state" style="padding:1.25rem">No bank transfers recorded yet</div></div>`; return; }
+  el.innerHTML = payments.map(p => {
     const lines = (p.session_ids || []).map(sid => {
       const s = sessions.find(x => x.id === sid); if (!s) return '';
       const c = clients.find(c => c.id === s.client_id);
       return `<div class="batch-session-row"><span style="font-weight:600;min-width:110px">${c?c.name:'?'}</span><span style="color:var(--text-muted)">${fmtDateShort(s.date)}</span><span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--green)">₪${Math.round(NET(clientRate(s.client_id)))} net</span><button onclick="removeFromBankBatch('${p.id}','${sid}')" style="margin-left:0.75rem;background:var(--red-soft);color:var(--red);border:none;padding:0.18rem 0.55rem;font-size:0.7rem;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">✕ remove</button></div>`;
     }).join('');
     const clientNames = [...new Set((p.session_ids||[]).map(sid => { const s=sessions.find(x=>x.id===sid); return s?clientName(s.client_id):null; }).filter(Boolean))].join(', ');
-    return `<div class="batch-card" id="bkb-${p.id}">
+    return `<div class="batch-card" id="bkb-${p.id}" style="${p.receipt_sent ? 'border-left:3px solid var(--green)' : 'border-left:3px solid var(--amber)'}">
       <div class="batch-header" onclick="toggleBatch('bkb-${p.id}')">
         <div class="batch-header-left">
           <span class="batch-date">${fmtDate(p.date)}</span>
