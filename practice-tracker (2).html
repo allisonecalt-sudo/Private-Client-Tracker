@@ -298,14 +298,40 @@ tbody tr:hover td{background:var(--surface2);}
         </div>
         <div style="font-size:.7rem;color:var(--text-dim);margin-top:.5rem">Press Enter to quickly add</div>
       </div>
-      <div class="filter-row">
-        <div class="filter-pills">
-          <button class="filter-btn active" onclick="filterSessions('all',this)">All</button>
-          <button class="filter-btn" onclick="filterSessions('happened',this)">Happened</button>
-          <button class="filter-btn" onclick="filterSessions('scheduled',this)">Scheduled</button>
-          <button class="filter-btn" onclick="filterSessions('paid',this)">Paid</button>
+      <div class="card" style="padding:1rem 1.25rem;margin-bottom:.75rem;">
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+          <div class="form-group" style="flex:1;min-width:120px;margin:0">
+            <label>Status</label>
+            <select id="filter-status" onchange="applySessionFilters()">
+              <option value="all">All statuses</option>
+              <option value="happened">Happened</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0">
+            <label>Client</label>
+            <select id="filter-client" onchange="applySessionFilters()">
+              <option value="all">All clients</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0">
+            <label>Type</label>
+            <select id="filter-type" onchange="applySessionFilters()">
+              <option value="all">Cash & Bank</option>
+              <option value="cash">Cash only</option>
+              <option value="bank">Bank only</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0">
+            <label>Month</label>
+            <select id="filter-month" onchange="applySessionFilters()">
+              <option value="all">All months</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="clearSessionFilters()" style="margin-bottom:0;align-self:flex-end">✕ Clear</button>
         </div>
-        <span style="font-size:.72rem;color:var(--text-dim)">Click headers to sort</span>
+        <div style="margin-top:.6rem;font-size:.7rem;color:var(--text-dim)">Click column headers to sort</div>
       </div>
       <div id="sessions-list" class="card"><div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div></div>
     </div>
@@ -439,7 +465,8 @@ const VV_CUT = 0.15;
 const NET = g => Number(g||0)*(1-VV_CUT);
 
 let sbClient, clients=[], sessions=[];
-let currentSessionFilter='all', sessionSortCol='date', sessionSortDir='desc';
+let sessionFilters={status:'all',client:'all',type:'all',month:'all'};
+let sessionSortCol='date', sessionSortDir='desc';
 let clientSortCol='name', clientSortDir='asc';
 let recordsSortCol='date', recordsSortDir='desc';
 let lastDeleted=null, undoTimer=null;
@@ -843,22 +870,55 @@ async function saveSessionEdit(){
 }
 function closeModal(name){document.getElementById('modal-'+name).style.display='none';}
 
-function filterSessions(filter,btn){currentSessionFilter=filter;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderSessionsTab();}
+function applySessionFilters(){
+  sessionFilters.status=document.getElementById('filter-status')?.value||'all';
+  sessionFilters.client=document.getElementById('filter-client')?.value||'all';
+  sessionFilters.type=document.getElementById('filter-type')?.value||'all';
+  sessionFilters.month=document.getElementById('filter-month')?.value||'all';
+  renderSessionsTab();
+}
+function clearSessionFilters(){
+  sessionFilters={status:'all',client:'all',type:'all',month:'all'};
+  ['filter-status','filter-client','filter-type','filter-month'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='all';});
+  renderSessionsTab();
+}
+function populateSessionFilterDropdowns(){
+  // Clients
+  const clientSel=document.getElementById('filter-client');
+  if(clientSel){
+    const active=clients.filter(c=>!c.archived).sort((a,b)=>a.name.localeCompare(b.name));
+    clientSel.innerHTML='<option value="all">All clients</option>'+active.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    if(sessionFilters.client!=='all')clientSel.value=sessionFilters.client;
+  }
+  // Months from actual session data
+  const monthSel=document.getElementById('filter-month');
+  if(monthSel){
+    const months=[...new Set(sessions.map(s=>s.date.substring(0,7)))].sort((a,b)=>b.localeCompare(a));
+    monthSel.innerHTML='<option value="all">All months</option>'+months.map(m=>{
+      const[y,mo]=m.split('-');
+      const label=new Date(Number(y),Number(mo)-1,1).toLocaleDateString('en-IL',{month:'long',year:'numeric'});
+      return`<option value="${m}">${label}</option>`;
+    }).join('');
+    if(sessionFilters.month!=='all')monthSel.value=sessionFilters.month;
+  }
+}
 function sortSessionsBy(col){if(sessionSortCol===col)sessionSortDir=sessionSortDir==='asc'?'desc':'asc';else{sessionSortCol=col;sessionSortDir=col==='date'?'desc':'asc';}renderSessionsTab();}
 
 function renderSessionsTab(){
+  populateSessionFilterDropdowns();
   const el=document.getElementById('sessions-list');
   let list=[...sessions];
-  if(currentSessionFilter==='happened')list=list.filter(s=>getSessionStatus(s)==='happened');
-  else if(currentSessionFilter==='scheduled')list=list.filter(s=>getSessionStatus(s)==='scheduled');
-  else if(currentSessionFilter==='paid')list=list.filter(s=>getSessionStatus(s)==='paid');
+  if(sessionFilters.status!=='all')list=list.filter(s=>getSessionStatus(s)===sessionFilters.status);
+  if(sessionFilters.client!=='all')list=list.filter(s=>s.client_id===sessionFilters.client);
+  if(sessionFilters.type!=='all'){const ids=clients.filter(c=>c.type===sessionFilters.type).map(c=>c.id);list=list.filter(s=>ids.includes(s.client_id));}
+  if(sessionFilters.month!=='all')list=list.filter(s=>s.date.startsWith(sessionFilters.month));
   const dir=sessionSortDir==='asc'?1:-1;
   if(sessionSortCol==='date')list.sort((a,b)=>(a.date>b.date?1:-1)*dir);
   else if(sessionSortCol==='client')list.sort((a,b)=>clientName(a.client_id).localeCompare(clientName(b.client_id))*dir);
   else if(sessionSortCol==='status'){const o={scheduled:0,happened:1,paid:2};list.sort((a,b)=>((o[getSessionStatus(a)]||0)-(o[getSessionStatus(b)]||0))*dir);}
   const arrow=col=>sessionSortCol===col?(sessionSortDir==='asc'?' ↑':' ↓'):'';
   const ts='cursor:pointer;user-select:none;';
-  if(!list.length){el.innerHTML=`<div class="empty-state"><div class="icon">📋</div>No ${currentSessionFilter==='all'?'':currentSessionFilter+' '}sessions</div>`;return;}
+  if(!list.length){el.innerHTML=`<div class="empty-state"><div class="icon">📋</div>No sessions match your filters</div>`;return;}
   el.innerHTML=`<div class="table-wrap"><table>
     <thead><tr>
       <th style="${ts}" onclick="sortSessionsBy('date')">Date${arrow('date')}</th>
