@@ -214,6 +214,14 @@ tbody tr:hover td{background:var(--surface2);}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+/* CALENDAR TOOLTIP */
+.cal-day{position:relative;}
+.cal-tooltip{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .75rem;min-width:160px;box-shadow:var(--shadow-lg);z-index:300;font-size:.76rem;line-height:1.5;white-space:nowrap;}
+.cal-tooltip::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:8px;height:8px;background:var(--surface);border-left:1px solid var(--border);border-top:1px solid var(--border);transform:translateX(-50%) rotate(45deg);}
+.cal-day:hover .cal-tooltip{display:block;}
+.cal-tooltip-row{display:flex;align-items:center;gap:.4rem;padding:.1rem 0;}
+.cal-tooltip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
 /* DRAGGABLE DASH SECTIONS */
 .dash-section{margin-bottom:1rem;position:relative;}
 .dash-section.arranging .drag-handle{display:flex;}
@@ -386,6 +394,29 @@ tbody tr:hover td{background:var(--surface2);}
         </div>
       </div>
       <div class="section-divider"><span>Needs attention — VV payment due</span></div>
+      <div class="card" style="padding:.75rem 1.25rem;margin-bottom:.75rem">
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Status</label>
+            <select id="cash-filter-status" onchange="applyCashFilters()">
+              <option value="all">All</option>
+              <option value="pending">Pending VV payment</option>
+              <option value="paid">Paid to VV</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Month</label>
+            <select id="cash-filter-month" onchange="applyCashFilters()"><option value="all">All months</option></select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:100px;margin:0"><label>Sort by</label>
+            <select id="cash-sort" onchange="applyCashFilters()">
+              <option value="date-desc">Date ↓</option>
+              <option value="date-asc">Date ↑</option>
+              <option value="amount-desc">Amount ↓</option>
+              <option value="amount-asc">Amount ↑</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="clearCashFilters()">✕ Clear</button>
+        </div>
+      </div>
       <div id="cash-needs-attention"><div class="skeleton skeleton-row"></div></div>
     </div>
 
@@ -408,6 +439,32 @@ tbody tr:hover td{background:var(--surface2);}
         </div>
       </div>
       <div class="section-divider"><span>All bank transfers</span></div>
+      <div class="card" style="padding:.75rem 1.25rem;margin-bottom:.75rem">
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Receipt</label>
+            <select id="bank-filter-status" onchange="applyBankFilters()">
+              <option value="all">All</option>
+              <option value="pending">No receipt yet</option>
+              <option value="sent">Receipt sent</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Client</label>
+            <select id="bank-filter-client" onchange="applyBankFilters()"><option value="all">All clients</option></select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Month</label>
+            <select id="bank-filter-month" onchange="applyBankFilters()"><option value="all">All months</option></select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:100px;margin:0"><label>Sort by</label>
+            <select id="bank-sort" onchange="applyBankFilters()">
+              <option value="date-desc">Date ↓</option>
+              <option value="date-asc">Date ↑</option>
+              <option value="amount-desc">Amount ↓</option>
+              <option value="amount-asc">Amount ↑</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="clearBankFilters()">✕ Clear</button>
+        </div>
+      </div>
       <div id="bank-needs-receipt"><div class="skeleton skeleton-row"></div></div>
     </div>
 
@@ -740,9 +797,17 @@ function renderCalendar(){
     const daySessions=sessions.filter(s=>s.date===dateStr);
     const isToday=dateStr===today;
     const dots=daySessions.map(s=>`<span class="cal-dot ${getSessionStatus(s)}"></span>`).join('');
+    const statusColor={happened:'var(--green)',paid:'var(--blue)',scheduled:'var(--text-dim)'};
+    const tooltipRows=daySessions.map(s=>{
+      const c=clients.find(c=>c.id===s.client_id);
+      const st=getSessionStatus(s);
+      return`<div class="cal-tooltip-row"><span class="cal-tooltip-dot" style="background:${statusColor[st]||'var(--text-dim)'}"></span><span style="font-weight:600">${c?c.name:'?'}</span><span style="color:var(--text-muted);margin-left:.25rem">${st}</span></div>`;
+    }).join('');
+    const tooltip=daySessions.length?`<div class="cal-tooltip">${tooltipRows}</div>`:'';
     html+=`<div class="cal-day${isToday?' today':''}">
       <span class="cal-num">${d}</span>
       ${daySessions.length?`<div class="cal-dots">${dots}</div>`:''}
+      ${tooltip}
     </div>`;
   }
   grid.innerHTML=html;
@@ -1188,7 +1253,72 @@ async function recordCashPayment(){
   });
   await loadSessions();renderSessionsTab();renderCashSessionPicker();loadCashPayments();renderDashboard();
 }
-async function loadCashPayments(){const{data}=await sbClient.from('cash_payments').select('*').order('date',{ascending:false});renderCashNeedsAttention(data||[]);}
+// ─── CASH FILTERS ────────────────────────────────────────────
+let cashFilters={status:'all',month:'all',sort:'date-desc'};
+let bankFilters={status:'all',client:'all',month:'all',sort:'date-desc'};
+
+function applyCashFilters(){
+  cashFilters.status=document.getElementById('cash-filter-status')?.value||'all';
+  cashFilters.month=document.getElementById('cash-filter-month')?.value||'all';
+  cashFilters.sort=document.getElementById('cash-sort')?.value||'date-desc';
+  loadCashPayments();
+}
+function clearCashFilters(){
+  cashFilters={status:'all',month:'all',sort:'date-desc'};
+  ['cash-filter-status','cash-filter-month','cash-sort'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=el.id==='cash-sort'?'date-desc':'all';});
+  loadCashPayments();
+}
+function applyBankFilters(){
+  bankFilters.status=document.getElementById('bank-filter-status')?.value||'all';
+  bankFilters.client=document.getElementById('bank-filter-client')?.value||'all';
+  bankFilters.month=document.getElementById('bank-filter-month')?.value||'all';
+  bankFilters.sort=document.getElementById('bank-sort')?.value||'date-desc';
+  loadVVPayments();
+}
+function clearBankFilters(){
+  bankFilters={status:'all',client:'all',month:'all',sort:'date-desc'};
+  ['bank-filter-status','bank-filter-client','bank-filter-month','bank-sort'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=el.id==='bank-sort'?'date-desc':'all';});
+  loadVVPayments();
+}
+function populateBankFilterDropdowns(payments){
+  const clientSel=document.getElementById('bank-filter-client');
+  if(clientSel){
+    const names=[...new Set(payments.flatMap(p=>(p.session_ids||[]).map(sid=>{const s=sessions.find(x=>x.id===sid);return s?clientName(s.client_id):null;}).filter(Boolean)))].sort();
+    clientSel.innerHTML='<option value="all">All clients</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    if(bankFilters.client!=='all')clientSel.value=bankFilters.client;
+  }
+  const monthSel=document.getElementById('bank-filter-month');
+  if(monthSel){
+    const months=[...new Set(payments.map(p=>p.date.substring(0,7)))].sort((a,b)=>b.localeCompare(a));
+    monthSel.innerHTML='<option value="all">All months</option>'+months.map(m=>{const[y,mo]=m.split('-');return`<option value="${m}">${new Date(Number(y),Number(mo)-1,1).toLocaleDateString('en-IL',{month:'long',year:'numeric'})}</option>`;}).join('');
+    if(bankFilters.month!=='all')monthSel.value=bankFilters.month;
+  }
+}
+function populateCashFilterDropdowns(payments){
+  const monthSel=document.getElementById('cash-filter-month');
+  if(monthSel){
+    const months=[...new Set(payments.map(p=>p.date.substring(0,7)))].sort((a,b)=>b.localeCompare(a));
+    monthSel.innerHTML='<option value="all">All months</option>'+months.map(m=>{const[y,mo]=m.split('-');return`<option value="${m}">${new Date(Number(y),Number(mo)-1,1).toLocaleDateString('en-IL',{month:'long',year:'numeric'})}</option>`;}).join('');
+    if(cashFilters.month!=='all')monthSel.value=cashFilters.month;
+  }
+}
+
+async function loadCashPayments(){
+  const{data}=await sbClient.from('cash_payments').select('*').order('date',{ascending:false});
+  const all=data||[];
+  populateCashFilterDropdowns(all);
+  let filtered=[...all];
+  if(cashFilters.status==='pending')filtered=filtered.filter(p=>!p.paid_to_vv);
+  else if(cashFilters.status==='paid')filtered=filtered.filter(p=>p.paid_to_vv);
+  if(cashFilters.month!=='all')filtered=filtered.filter(p=>p.date.startsWith(cashFilters.month));
+  const[sc,sd]=cashFilters.sort.split('-');
+  filtered.sort((a,b)=>{
+    if(sc==='date')return sd==='asc'?(a.date>b.date?1:-1):(a.date<b.date?1:-1);
+    if(sc==='amount')return sd==='asc'?Number(a.vv_owed)-Number(b.vv_owed):Number(b.vv_owed)-Number(a.vv_owed);
+    return 0;
+  });
+  renderCashNeedsAttention(filtered);
+}
 
 function renderCashNeedsAttention(payments){
   const el=document.getElementById('cash-needs-attention');
@@ -1306,7 +1436,23 @@ async function recordVVPayment(){
   });
   await loadSessions();renderSessionsTab();renderVVSessionPicker();loadVVPayments();renderDashboard();
 }
-async function loadVVPayments(){const{data}=await sbClient.from('vv_payments').select('*').order('date',{ascending:false});renderBankNeedsReceipt(data||[]);}
+async function loadVVPayments(){
+  const{data}=await sbClient.from('vv_payments').select('*').order('date',{ascending:false});
+  const all=data||[];
+  populateBankFilterDropdowns(all);
+  let filtered=[...all];
+  if(bankFilters.status==='pending')filtered=filtered.filter(p=>!p.receipt_sent);
+  else if(bankFilters.status==='sent')filtered=filtered.filter(p=>p.receipt_sent);
+  if(bankFilters.client!=='all')filtered=filtered.filter(p=>(p.session_ids||[]).some(sid=>{const s=sessions.find(x=>x.id===sid);return s&&clientName(s.client_id)===bankFilters.client;}));
+  if(bankFilters.month!=='all')filtered=filtered.filter(p=>p.date.startsWith(bankFilters.month));
+  const[sc,sd]=bankFilters.sort.split('-');
+  filtered.sort((a,b)=>{
+    if(sc==='date')return sd==='asc'?(a.date>b.date?1:-1):(a.date<b.date?1:-1);
+    if(sc==='amount')return sd==='asc'?Number(a.you_get)-Number(b.you_get):Number(b.you_get)-Number(a.you_get);
+    return 0;
+  });
+  renderBankNeedsReceipt(filtered);
+}
 
 function renderBankNeedsReceipt(payments){
   const el=document.getElementById('bank-needs-receipt');
