@@ -475,8 +475,13 @@ window.addEventListener('load',()=>{
   const t=todayStr();
   ['session-date','cash-payment-date','vv-payment-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=t;});
   document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('tab-sessions').classList.contains('active'))addSession();});
-  loadAll();
+  initApp();
 });
+
+async function initApp() {
+  document.getElementById('app').style.display = 'block';
+  loadAll();
+}
 
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('theme',t);const b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️ Light':'🌙 Dark';}
 function toggleTheme(){applyTheme((document.documentElement.getAttribute('data-theme')||'light')==='dark'?'light':'dark');}
