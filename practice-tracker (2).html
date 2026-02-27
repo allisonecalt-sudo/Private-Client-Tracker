@@ -132,6 +132,7 @@ tbody tr:hover td{background:var(--surface2);}
 .brow:last-child{border-bottom:none;}
 .btotals{display:flex;gap:1.5rem;flex-wrap:wrap;padding:.75rem 1.25rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--muted);}
 
+/* ── Calendar ── */
 .cal-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;box-shadow:var(--shadow);}
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
 .cal-title{font-weight:700;font-size:.95rem;}
@@ -139,16 +140,51 @@ tbody tr:hover td{background:var(--surface2);}
 .cnav:hover{background:var(--surface2);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
 .cdl{text-align:center;font-size:.65rem;font-weight:600;color:var(--dim);text-transform:uppercase;padding:.3rem 0;}
-.cd{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;position:relative;min-height:32px;}
+.cd{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;position:relative;min-height:32px;transition:background .12s;}
 .cd.today{background:var(--asoft);}
 .cd.today .cn{color:var(--accent);font-weight:700;}
 .cd.om .cn{color:var(--dim);}
+.cd.has-sess{cursor:default;}
+.cd.has-sess:hover{background:var(--surface2);}
+.cd.today.has-sess:hover{background:var(--aglow);}
 .cn{font-size:.78rem;font-weight:500;line-height:1;}
 .cdots{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap;justify-content:center;max-width:28px;}
 .dot{width:5px;height:5px;border-radius:50%;}
 .dot.h{background:var(--green);}
 .dot.p{background:var(--blue);}
 .dot.s{background:var(--dim);}
+
+/* ── Calendar Tooltip ── */
+.cal-tooltip{
+  position:fixed;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:.75rem 1rem;
+  box-shadow:var(--shadowlg);
+  z-index:9999;
+  pointer-events:none;
+  min-width:170px;
+  max-width:240px;
+  font-size:.8rem;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .15s,transform .15s;
+}
+.cal-tooltip.show{opacity:1;transform:translateY(0);}
+.cal-tooltip .tt-date{
+  font-size:.62rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);margin-bottom:.5rem;
+}
+.cal-tooltip .tt-row{
+  display:flex;align-items:center;gap:.55rem;
+  padding:.22rem 0;border-bottom:1px solid var(--border);
+}
+.cal-tooltip .tt-row:last-child{border-bottom:none;}
+.cal-tooltip .tt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.cal-tooltip .tt-info{display:flex;flex-direction:column;gap:.06rem;flex:1;}
+.cal-tooltip .tt-name{font-weight:600;font-size:.8rem;}
+.cal-tooltip .tt-meta{font-size:.68rem;color:var(--muted);display:flex;gap:.4rem;}
 
 .pend-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:var(--surface2);border-radius:var(--r);font-size:.84rem;border:1px solid var(--border);margin-bottom:.5rem;}
 .pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
@@ -614,23 +650,96 @@ function renderChart(){
         y:{grid:{color:dark?'#333330':'#e8e7e2'},ticks:{font:{family:'DM Mono',size:10},color:dark?'#7a7870':'#6b6960',callback:v=>'₪'+v}}}}});
 }
 
+// ─── CALENDAR WITH HOVER TOOLTIPS ────────────────────────────
+let _calTT=null;
+
 function renderCal(){
-  const tEl=document.getElementById('cal-title');const gEl=document.getElementById('cal-grid');if(!tEl||!gEl)return;
+  const tEl=document.getElementById('cal-title');
+  const gEl=document.getElementById('cal-grid');
+  if(!tEl||!gEl)return;
   tEl.textContent=fmonth(calY,calM);
   const days=['Su','Mo','Tu','We','Th','Fr','Sa'];
   const first=new Date(calY,calM,1).getDay();
   const dim=new Date(calY,calM+1,0).getDate();
   const td=today();
   let html=days.map(d=>`<div class="cdl">${d}</div>`).join('');
-  for(let i=0;i<first;i++){const d=new Date(calY,calM,-(first-i-1));html+=`<div class="cd om"><span class="cn">${d.getDate()}</span></div>`;}
+  // previous month filler days
+  for(let i=0;i<first;i++){
+    const d=new Date(calY,calM,-(first-i-1));
+    html+=`<div class="cd om"><span class="cn">${d.getDate()}</span></div>`;
+  }
+  // actual days
   for(let d=1;d<=dim;d++){
     const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const ds2=sessions.filter(s=>s.date===ds);
+    const daySessions=sessions.filter(s=>s.date===ds);
     const isT=ds===td;
-    const dots=ds2.map(s=>`<span class="dot ${status(s)==='paid'?'p':status(s)==='scheduled'?'s':'h'}"></span>`).join('');
-    html+=`<div class="cd${isT?' today':''}"><span class="cn">${d}</span>${ds2.length?`<div class="cdots">${dots}</div>`:''}</div>`;
+    const hasSess=daySessions.length>0;
+    const dots=daySessions.map(s=>`<span class="dot ${status(s)==='paid'?'p':status(s)==='scheduled'?'s':'h'}"></span>`).join('');
+    html+=`<div class="cd${isT?' today':''}${hasSess?' has-sess':''}" data-date="${ds}">` +
+      `<span class="cn">${d}</span>` +
+      (hasSess?`<div class="cdots">${dots}</div>`:'') +
+      `</div>`;
   }
   gEl.innerHTML=html;
+
+  // Create tooltip element once
+  if(!_calTT){
+    _calTT=document.createElement('div');
+    _calTT.className='cal-tooltip';
+    document.body.appendChild(_calTT);
+  }
+
+  // Attach hover listeners to days that have sessions
+  gEl.querySelectorAll('.has-sess').forEach(cell=>{
+    const ds=cell.dataset.date;
+    cell.addEventListener('mouseenter',e=>showCalTT(e,ds));
+    cell.addEventListener('mousemove',e=>posCalTT(e));
+    cell.addEventListener('mouseleave',hideCalTT);
+  });
+}
+
+function showCalTT(e,ds){
+  const daySessions=sessions.filter(s=>s.date===ds);
+  const d=new Date(ds+'T12:00:00');
+  const label=d.toLocaleDateString('en-IL',{weekday:'long',day:'numeric',month:'long'});
+
+  const rows=daySessions.map(s=>{
+    const c=clients.find(x=>x.id===s.client_id);
+    const st=status(s);
+    const dotCol=st==='paid'?'var(--blue)':st==='scheduled'?'var(--dim)':'var(--green)';
+    const stLabel=st==='paid'?'Paid':st==='scheduled'?'Scheduled':'Happened';
+    const r=c?Math.round(net(c.rate)):0;
+    const typeTag=c?(c.type==='cash'?'Cash':'Bank'):'';
+    return `<div class="tt-row">
+      <span class="tt-dot" style="background:${dotCol}"></span>
+      <span class="tt-info">
+        <span class="tt-name">${c?c.name:'?'}</span>
+        <span class="tt-meta"><span>${stLabel}</span>${r?`<span>₪${r}</span>`:''}<span style="opacity:.6">${typeTag}</span></span>
+      </span>
+    </div>`;
+  }).join('');
+
+  _calTT.innerHTML=`<div class="tt-date">${label}</div>${rows}`;
+  posCalTT(e);
+  _calTT.classList.add('show');
+}
+
+function posCalTT(e){
+  if(!_calTT)return;
+  const w=_calTT.offsetWidth||190;
+  const h=_calTT.offsetHeight||80;
+  const vw=window.innerWidth;
+  const vh=window.innerHeight;
+  let x=e.clientX+16;
+  let y=e.clientY-8;
+  if(x+w>vw-12)x=e.clientX-w-10;
+  if(y+h>vh-12)y=e.clientY-h-4;
+  _calTT.style.left=x+'px';
+  _calTT.style.top=y+'px';
+}
+
+function hideCalTT(){
+  if(_calTT)_calTT.classList.remove('show');
 }
 
 function renderOutstanding(){
@@ -733,12 +842,10 @@ function clearSF(){sFilters={status:'all',client:'all',type:'all',month:'all'};[
 function sortSessions(col){if(sSortCol===col)sSortDir=sSortDir==='asc'?'desc':'asc';else{sSortCol=col;sSortDir=col==='date'?'desc':'asc';}renderSessionsTab();}
 
 function renderSessionsTab(){
-  // populate filter dropdowns
   const fc=document.getElementById('f-client');
   if(fc){const active=clients.filter(c=>!c.archived).sort((a,b)=>a.name.localeCompare(b.name));fc.innerHTML='<option value="all">All clients</option>'+active.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');if(sFilters.client!=='all')fc.value=sFilters.client;}
   const fm=document.getElementById('f-month');
   if(fm&&fm.options.length<=1){const months=[...new Set(sessions.map(s=>s.date.substring(0,7)))].sort((a,b)=>b.localeCompare(a));months.forEach(m=>{const[y,mo]=m.split('-');const opt=document.createElement('option');opt.value=m;opt.textContent=new Date(Number(y),Number(mo)-1,1).toLocaleDateString('en-IL',{month:'long',year:'numeric'});fm.appendChild(opt);});}
-
   const el=document.getElementById('sessions-list');
   let list=[...sessions];
   if(sFilters.status!=='all')list=list.filter(s=>status(s)===sFilters.status);
@@ -834,7 +941,6 @@ async function deleteClient(id){
   if(!confirm(msg))return;
   if(sc.length)await sb.from('sessions').delete().eq('client_id',id);
   await sb.from('clients').delete().eq('id',id);
-  const oldClients=[...clients];const oldSessions=[...sessions];
   clients=clients.filter(c=>c.id!==id);sessions=sessions.filter(s=>s.client_id!==id);
   toast('Client deleted','ok');fillClientSelects();renderClientsTab();renderSessionsTab();renderHome();
 }
@@ -928,7 +1034,7 @@ function renderCashBatches(payments){
           <span class="bchev">▼</span>
         </div>
       </div>
-      <div class="blist">${rows||'<div class="brow" style="color:var(--dim)">No details</div>'}<div class="btotals"><span>Gross: <strong style="font-family:\'DM Mono\',monospace">₪${Math.round(Number(p.total))}</strong></span><span>You kept (85%): <strong style="color:var(--green);font-family:\'DM Mono\',monospace">₪${Math.round(net(Number(p.total)))}</strong></span><span>VV owed (15%): <strong style="color:var(--amber);font-family:\'DM Mono\',monospace">₪${Math.round(Number(p.vv_owed))}</strong></span></div></div>
+      <div class="blist">${rows||'<div class="brow" style="color:var(--dim)">No details</div>'}<div class="btotals"><span>Gross: <strong style="font-family:'DM Mono',monospace">₪${Math.round(Number(p.total))}</strong></span><span>You kept (85%): <strong style="color:var(--green);font-family:'DM Mono',monospace">₪${Math.round(net(Number(p.total)))}</strong></span><span>VV owed (15%): <strong style="color:var(--amber);font-family:'DM Mono',monospace">₪${Math.round(Number(p.vv_owed))}</strong></span></div></div>
     </div>`;
   }).join('');
 }
@@ -1018,7 +1124,7 @@ function renderBankBatches(payments){
           <span class="bchev">▼</span>
         </div>
       </div>
-      <div class="blist">${rows||'<div class="brow" style="color:var(--dim)">No details</div>'}<div class="btotals"><span>Full rate: <strong style="font-family:\'DM Mono\',monospace">₪${Math.round(Number(p.total))}</strong></span><span>You get (85%): <strong style="color:var(--green);font-family:\'DM Mono\',monospace">₪${Math.round(Number(p.you_get))}</strong></span></div></div>
+      <div class="blist">${rows||'<div class="brow" style="color:var(--dim)">No details</div>'}<div class="btotals"><span>Full rate: <strong style="font-family:'DM Mono',monospace">₪${Math.round(Number(p.total))}</strong></span><span>You get (85%): <strong style="color:var(--green);font-family:'DM Mono',monospace">₪${Math.round(Number(p.you_get))}</strong></span></div></div>
     </div>`;
   }).join('');
 }
