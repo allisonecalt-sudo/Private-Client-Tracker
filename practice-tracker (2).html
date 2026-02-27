@@ -197,7 +197,7 @@ tbody tr:hover td{background:var(--surface2);}
 .modal-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.25rem;}
 
 /* TOAST */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.6rem 1.1rem;border-radius:30px;font-size:.84rem;font-weight:500;box-shadow:var(--shadow-lg);z-index:9999;opacity:0;transition:all .22s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.6rem 1.1rem;border-radius:30px;font-size:.84rem;font-weight:500;box-shadow:var(--shadow-lg);z-index:9999;opacity:0;transition:all .22s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.success{border-color:rgba(45,106,79,.4);color:var(--green);}
 .toast.error{border-color:rgba(192,57,43,.4);color:var(--red);}
@@ -213,6 +213,16 @@ tbody tr:hover td{background:var(--surface2);}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* DRAGGABLE DASH SECTIONS */
+.dash-section{margin-bottom:1rem;position:relative;}
+.dash-section.arranging .drag-handle{display:flex;}
+.dash-section.arranging{cursor:grab;}
+.dash-section.dragging{opacity:.4;cursor:grabbing;}
+.dash-section.drag-over{outline:2px dashed var(--accent);outline-offset:3px;border-radius:var(--radius-lg);}
+.drag-handle{display:none;position:absolute;top:.75rem;right:.75rem;z-index:10;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:.2rem .4rem;font-size:.75rem;color:var(--text-muted);cursor:grab;align-items:center;gap:.25rem;}
+.arranging-banner{background:var(--accent-soft);border:1px dashed var(--accent);border-radius:var(--radius);padding:.5rem 1rem;font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:.75rem;display:none;text-align:center;}
+.arranging-banner.show{display:block;}
 
 @media(min-width:601px){.bottom-nav{display:none!important;}#app{padding-bottom:0;}}
 @media(max-width:600px){
@@ -252,60 +262,22 @@ tbody tr:hover td{background:var(--surface2);}
     <div id="tab-home" class="tab-content active">
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem">
         <h2 style="font-size:1.25rem;font-weight:700;letter-spacing:-.01em" id="dash-title">Loading…</h2>
-        <div style="display:flex;gap:.35rem;">
+        <div style="display:flex;gap:.35rem;align-items:center">
           <button class="cal-nav" onclick="shiftDashMonth(-1)">‹</button>
           <button class="cal-nav" onclick="shiftDashMonth(1)">›</button>
+          <button class="cal-nav" id="arrange-btn" onclick="toggleArrange()" style="margin-left:.35rem;font-size:.7rem;padding:.25rem .6rem">✦ Arrange</button>
         </div>
       </div>
 
-      <!-- STATS -->
+      <!-- STATS always on top -->
       <div class="stats-row">
         <div class="stat-card green"><div class="stat-label">Earned</div><div class="stat-value" id="d-earned">₪—</div><div class="stat-sub">sessions happened</div></div>
         <div class="stat-card amber"><div class="stat-label">Still to collect</div><div class="stat-value" id="d-collect">₪—</div><div class="stat-sub">yours, not yet received</div></div>
         <div class="stat-card blue"><div class="stat-label">Scheduled</div><div class="stat-value" id="d-scheduled" style="color:var(--text-muted)">—</div><div class="stat-sub">if they all happen</div></div>
       </div>
 
-      <!-- CHART -->
-      <div class="card" style="margin-bottom:1rem;">
-        <div class="card-title">Monthly earnings (net)</div>
-        <canvas id="earnings-chart" height="80"></canvas>
-      </div>
-
-      <!-- CALENDAR + OUTSTANDING side by side on desktop -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;" id="home-grid">
-        <div class="cal-wrap">
-          <div class="cal-header">
-            <button class="cal-nav" onclick="shiftCal(-1)">‹</button>
-            <span class="cal-title" id="cal-title"></span>
-            <button class="cal-nav" onclick="shiftCal(1)">›</button>
-          </div>
-          <div class="cal-grid" id="cal-grid"></div>
-          <div style="display:flex;gap:1rem;margin-top:.85rem;flex-wrap:wrap;">
-            <span style="display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Happened</span>
-            <span style="display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block"></span>Paid</span>
-            <span style="display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:var(--text-dim);display:inline-block"></span>Scheduled</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="card" style="margin-bottom:0">
-            <div class="card-title">Outstanding per client</div>
-            <div id="outstanding-list"><div class="skeleton skeleton-row"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SCHEDULED SESSIONS -->
-      <div class="card">
-        <div class="card-title">Scheduled sessions</div>
-        <div id="scheduled-list"><div class="skeleton skeleton-row"></div></div>
-      </div>
-
-      <!-- TO DO -->
-      <div class="card">
-        <div class="card-title" style="margin-bottom:.75rem">To do</div>
-        <div id="pending-actions"><div class="skeleton skeleton-row"></div></div>
-      </div>
+      <!-- DRAGGABLE SECTIONS -->
+      <div id="dash-sections"></div>
     </div>
 
     <!-- SESSIONS -->
@@ -349,6 +321,14 @@ tbody tr:hover td{background:var(--surface2);}
           <div class="form-group"><label>Rate (₪)</label><input type="number" id="client-rate" placeholder="420"></div>
           <button class="btn btn-primary" onclick="addClient()">+ Add</button>
         </div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-pills">
+          <button class="filter-btn active" onclick="filterClients('all',this)">All</button>
+          <button class="filter-btn" onclick="filterClients('cash',this)">Cash</button>
+          <button class="filter-btn" onclick="filterClients('bank',this)">Bank</button>
+        </div>
+        <span style="font-size:.72rem;color:var(--text-dim)">Click headers to sort</span>
       </div>
       <div id="clients-list" class="card"><div class="skeleton skeleton-row"></div></div>
       <div id="archived-section" style="display:none">
@@ -460,6 +440,8 @@ const NET = g => Number(g||0)*(1-VV_CUT);
 
 let sbClient, clients=[], sessions=[];
 let currentSessionFilter='all', sessionSortCol='date', sessionSortDir='desc';
+let clientSortCol='name', clientSortDir='asc';
+let recordsSortCol='date', recordsSortDir='desc';
 let lastDeleted=null, undoTimer=null;
 let calYear, calMonth, dashYear, dashMonth;
 let editingSessionId=null, editingClientId=null;
@@ -524,6 +506,110 @@ function switchTab(name){
   if(name==='records')renderRecordsTab();
 }
 
+// ─── DRAG & DROP DASHBOARD ──────────────────────────────────
+const DEFAULT_SECTION_ORDER = ['todo','chart','cal-outstanding','scheduled'];
+const SECTION_LABELS = {
+  'todo': 'To Do',
+  'chart': 'Monthly Chart',
+  'cal-outstanding': 'Calendar & Outstanding',
+  'scheduled': 'Scheduled Sessions'
+};
+let sectionOrder = JSON.parse(localStorage.getItem('dash_order') || 'null') || [...DEFAULT_SECTION_ORDER];
+let arranging = false;
+let dragSrc = null;
+
+function toggleArrange() {
+  arranging = !arranging;
+  const btn = document.getElementById('arrange-btn');
+  const banner = document.getElementById('arrange-banner');
+  btn.textContent = arranging ? '✓ Done' : '✦ Arrange';
+  btn.style.color = arranging ? 'var(--accent)' : '';
+  if (banner) banner.classList.toggle('show', arranging);
+  document.querySelectorAll('.dash-section').forEach(el => el.classList.toggle('arranging', arranging));
+}
+
+function saveSectionOrder() {
+  localStorage.setItem('dash_order', JSON.stringify(sectionOrder));
+}
+
+function buildDashSections() {
+  const container = document.getElementById('dash-sections');
+  container.innerHTML = `<div id="arrange-banner" class="arranging-banner">Drag sections to reorder • tap ✓ Done when finished</div>` +
+    sectionOrder.map(id => `<div class="dash-section" id="dsec-${id}" draggable="true" data-sid="${id}">
+      <div class="drag-handle">⠿ drag</div>
+      ${getSectionHTML(id)}
+    </div>`).join('');
+
+  // attach drag events
+  container.querySelectorAll('.dash-section').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      if (!arranging) { e.preventDefault(); return; }
+      dragSrc = el;
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      container.querySelectorAll('.dash-section').forEach(x => x.classList.remove('drag-over'));
+    });
+    el.addEventListener('dragover', e => {
+      if (!arranging || !dragSrc || dragSrc === el) return;
+      e.preventDefault();
+      container.querySelectorAll('.dash-section').forEach(x => x.classList.remove('drag-over'));
+      el.classList.add('drag-over');
+    });
+    el.addEventListener('drop', e => {
+      if (!arranging || !dragSrc || dragSrc === el) return;
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      const ids = [...container.querySelectorAll('.dash-section')].map(x => x.dataset.sid);
+      const fromIdx = ids.indexOf(dragSrc.dataset.sid);
+      const toIdx = ids.indexOf(el.dataset.sid);
+      ids.splice(fromIdx, 1);
+      ids.splice(toIdx, 0, dragSrc.dataset.sid);
+      sectionOrder = ids;
+      saveSectionOrder();
+      buildDashSections();
+      if (arranging) {
+        document.querySelectorAll('.dash-section').forEach(x => x.classList.add('arranging'));
+        document.getElementById('arrange-banner')?.classList.add('show');
+      }
+      renderDashboardSections();
+    });
+  });
+}
+
+function getSectionHTML(id) {
+  switch(id) {
+    case 'todo': return `<div class="card"><div class="card-title" style="margin-bottom:.75rem">To do</div><div id="pending-actions"><div class="skeleton skeleton-row"></div></div></div>`;
+    case 'chart': return `<div class="card"><div class="card-title">Monthly earnings (net)</div><canvas id="earnings-chart" height="80"></canvas></div>`;
+    case 'cal-outstanding': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" id="home-grid">
+      <div class="cal-wrap">
+        <div class="cal-header"><button class="cal-nav" onclick="shiftCal(-1)">‹</button><span class="cal-title" id="cal-title"></span><button class="cal-nav" onclick="shiftCal(1)">›</button></div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div style="display:flex;gap:1rem;margin-top:.85rem;flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Happened</span>
+          <span style="display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block"></span>Paid</span>
+          <span style="display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:var(--text-dim);display:inline-block"></span>Scheduled</span>
+        </div>
+      </div>
+      <div><div class="card" style="margin-bottom:0"><div class="card-title">Outstanding per client</div><div id="outstanding-list"><div class="skeleton skeleton-row"></div></div></div></div>
+    </div>`;
+    case 'scheduled': return `<div class="card"><div class="card-title">Scheduled sessions</div><div id="scheduled-list"><div class="skeleton skeleton-row"></div></div></div>`;
+    default: return '';
+  }
+}
+
+function renderDashboardSections() {
+  renderPendingActions();
+  renderEarningsChart();
+  renderCalendar();
+  renderOutstandingList();
+  renderScheduledList();
+  // fix home-grid responsive
+  const grid = document.getElementById('home-grid');
+  if (grid) grid.style.gridTemplateColumns = window.innerWidth < 650 ? '1fr' : '1fr 1fr';
+}
+
 // ─── DASHBOARD ───────────────────────────────────────────────
 function shiftDashMonth(dir){
   dashMonth+=dir;
@@ -549,11 +635,9 @@ async function renderDashboard(){
   document.getElementById('d-collect').textContent='₪'+Math.round(toCollect);
   document.getElementById('d-scheduled').textContent=scheduled>0?'₪'+Math.round(scheduled):'—';
 
-  renderCalendar();
-  renderOutstandingList();
-  renderScheduledList();
-  renderPendingActions();
-  renderEarningsChart();
+  // Build sections if not yet built
+  if(!document.getElementById('dsec-todo')) buildDashSections();
+  renderDashboardSections();
 }
 
 // ─── CALENDAR ────────────────────────────────────────────────
@@ -875,14 +959,33 @@ async function deleteClient(id){
   await loadClients();await loadSessions();renderClientsTab();renderSessionsTab();renderDashboard();
 }
 
+let currentClientFilter='all';
+function filterClients(f,btn){currentClientFilter=f;document.querySelectorAll('#tab-clients .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderClientsTab();}
+function sortClientsBy(col){if(clientSortCol===col)clientSortDir=clientSortDir==='asc'?'desc':'asc';else{clientSortCol=col;clientSortDir='asc';}renderClientsTab();}
+
 function renderClientsTab(){
-  const active=clients.filter(c=>!c.archived);
+  let active=clients.filter(c=>!c.archived);
+  if(currentClientFilter==='cash')active=active.filter(c=>c.type==='cash');
+  if(currentClientFilter==='bank')active=active.filter(c=>c.type==='bank');
   const archived=clients.filter(c=>c.archived);
+  const dir=clientSortDir==='asc'?1:-1;
+  if(clientSortCol==='name')active.sort((a,b)=>a.name.localeCompare(b.name)*dir);
+  else if(clientSortCol==='rate')active.sort((a,b)=>(Number(a.rate)-Number(b.rate))*dir);
+  else if(clientSortCol==='sessions')active.sort((a,b)=>(sessions.filter(s=>s.client_id===a.id).length-sessions.filter(s=>s.client_id===b.id).length)*dir);
+  const arrow=col=>clientSortCol===col?(clientSortDir==='asc'?' ↑':' ↓'):'';
+  const ts='cursor:pointer;user-select:none;';
   const el=document.getElementById('clients-list');
   if(!active.length){el.innerHTML=`<div class="empty-state"><div class="icon">👤</div>No active clients</div>`;}
   else el.innerHTML=`<div class="table-wrap"><table>
-    <thead><tr><th>Name</th><th>Type</th><th>Rate</th><th>You Keep</th><th>Sessions</th><th></th></tr></thead>
-    <tbody>${active.sort((a,b)=>a.name.localeCompare(b.name)).map(c=>{
+    <thead><tr>
+      <th style="${ts}" onclick="sortClientsBy('name')">Name${arrow('name')}</th>
+      <th>Type</th>
+      <th style="${ts}" onclick="sortClientsBy('rate')">Rate${arrow('rate')}</th>
+      <th>You Keep</th>
+      <th style="${ts}" onclick="sortClientsBy('sessions')">Sessions${arrow('sessions')}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${active.map(c=>{
       const count=sessions.filter(s=>s.client_id===c.id).length;
       const unpaid=sessions.filter(s=>s.client_id===c.id&&!s.paid).length;
       return`<tr>
