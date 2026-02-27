@@ -253,7 +253,11 @@ tbody tr:hover td{background:var(--surface2);}
         <button class="htab" onclick="switchTab('records')">Records</button>
       </div>
     </div>
-    <button class="btn btn-outline btn-sm" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <button class="btn btn-ghost btn-sm" id="undo-btn" onclick="undoAction()" disabled title="Undo (Ctrl+Z)" style="font-size:.8rem;padding:.35rem .65rem;opacity:.4">↩ Undo</button>
+      <button class="btn btn-ghost btn-sm" id="redo-btn" onclick="redoAction()" disabled title="Redo (Ctrl+Y)" style="font-size:.8rem;padding:.35rem .65rem;opacity:.4">↪ Redo</button>
+      <button class="btn btn-outline btn-sm" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+    </div>
   </div>
 
   <div class="main">
@@ -469,6 +473,49 @@ let sessionFilters={status:'all',client:'all',type:'all',month:'all'};
 let sessionSortCol='date', sessionSortDir='desc';
 let clientSortCol='name', clientSortDir='asc';
 let recordsSortCol='date', recordsSortDir='desc';
+// ─── UNDO/REDO SYSTEM ───────────────────────────────────────
+const undoStack = [];
+const redoStack = [];
+const MAX_HISTORY = 50;
+
+function pushUndo(action) {
+  undoStack.push(action);
+  if (undoStack.length > MAX_HISTORY) undoStack.shift();
+  redoStack.length = 0;
+  updateUndoRedoBtns();
+}
+
+function updateUndoRedoBtns() {
+  const u = document.getElementById('undo-btn');
+  const r = document.getElementById('redo-btn');
+  if (u) { u.disabled = undoStack.length === 0; u.style.opacity = undoStack.length ? '1' : '.4'; u.title = undoStack.length ? 'Undo: ' + undoStack[undoStack.length-1].label : 'Nothing to undo'; }
+  if (r) { r.disabled = redoStack.length === 0; r.style.opacity = redoStack.length ? '1' : '.4'; r.title = redoStack.length ? 'Redo: ' + redoStack[redoStack.length-1].label : 'Nothing to redo'; }
+}
+
+async function undoAction() {
+  if (!undoStack.length) return;
+  const action = undoStack.pop();
+  redoStack.push(action);
+  updateUndoRedoBtns();
+  await action.undo();
+  toast('Undone: ' + action.label, 'success');
+}
+
+async function redoAction() {
+  if (!redoStack.length) return;
+  const action = redoStack.pop();
+  undoStack.push(action);
+  updateUndoRedoBtns();
+  await action.redo();
+  toast('Redone: ' + action.label, 'success');
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undoAction(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redoAction(); }
+});
+
 let lastDeleted=null, undoTimer=null;
 let calYear, calMonth, dashYear, dashMonth;
 let editingSessionId=null, editingClientId=null;
@@ -825,28 +872,22 @@ async function addSession(){
 
 async function softDeleteSession(id){
   const s=sessions.find(x=>x.id===id);if(!s)return;
-  lastDeleted=s;
+  const snap={...s};
+  await sbClient.from('sessions').delete().eq('id',id);
   sessions=sessions.filter(x=>x.id!==id);
+  pushUndo({
+    label:'Delete session ('+clientName(snap.client_id)+' '+fmtDateShort(snap.date)+')',
+    undo: async()=>{
+      await sbClient.from('sessions').insert(snap);
+      await loadSessions();renderSessionsTab();renderDashboard();renderCashSessionPicker();renderVVSessionPicker();
+    },
+    redo: async()=>{
+      await sbClient.from('sessions').delete().eq('id',snap.id);
+      await loadSessions();renderSessionsTab();renderDashboard();renderCashSessionPicker();renderVVSessionPicker();
+    }
+  });
   renderSessionsTab();renderDashboard();renderCashSessionPicker();renderVVSessionPicker();
-  toast('Deleted — tap to undo','success');
-  const toastEl=document.getElementById('toast');
-  toastEl.classList.add('clickable');toastEl.onclick=undoDelete;
-  clearTimeout(undoTimer);
-  undoTimer=setTimeout(async()=>{
-    toastEl.onclick=null;toastEl.classList.remove('clickable');
-    await sbClient.from('sessions').delete().eq('id',id);
-    lastDeleted=null;
-  },4500);
-}
-
-function undoDelete(){
-  if(!lastDeleted)return;
-  clearTimeout(undoTimer);
-  sessions=[lastDeleted,...sessions].sort((a,b)=>a.date<b.date?1:-1);
-  lastDeleted=null;
-  const t=document.getElementById('toast');t.onclick=null;t.classList.remove('clickable');
-  toast('Undo ✓','success');
-  renderSessionsTab();renderDashboard();renderCashSessionPicker();renderVVSessionPicker();
+  toast('Session deleted','success');
 }
 
 function openSessionEdit(id){
@@ -951,9 +992,16 @@ function renderSessionsTab(){
 }
 
 async function changeSessionStatus(id,newStatus){
-  const s=sessions.find(x=>x.id===id);if(s)s.status=newStatus;
-  renderDashboard();renderCashSessionPicker();renderVVSessionPicker();
+  const s=sessions.find(x=>x.id===id);if(!s)return;
+  const oldStatus=s.status||'happened';
+  s.status=newStatus;
   await sbClient.from('sessions').update({status:newStatus}).eq('id',id);
+  pushUndo({
+    label:'Status change '+clientName(s.client_id)+': '+oldStatus+' → '+newStatus,
+    undo:async()=>{ s.status=oldStatus; await sbClient.from('sessions').update({status:oldStatus}).eq('id',id); renderSessionsTab();renderDashboard();renderCashSessionPicker();renderVVSessionPicker(); },
+    redo:async()=>{ s.status=newStatus; await sbClient.from('sessions').update({status:newStatus}).eq('id',id); renderSessionsTab();renderDashboard();renderCashSessionPicker();renderVVSessionPicker(); }
+  });
+  renderDashboard();renderCashSessionPicker();renderVVSessionPicker();renderSessionsTab();
   toast('Status updated ✓','success');
 }
 
@@ -1015,7 +1063,21 @@ async function deleteClient(id){
   if(!confirm(msg))return;
   if(sessionCount>0)await sbClient.from('sessions').delete().eq('client_id',id);
   await sbClient.from('clients').delete().eq('id',id);
+  const deletedSessions=sessions.filter(s=>s.client_id===id);
   toast('Client deleted','success');
+  pushUndo({
+    label:'Delete client '+c.name,
+    undo:async()=>{
+      await sbClient.from('clients').insert(c);
+      if(deletedSessions.length)await sbClient.from('sessions').insert(deletedSessions);
+      await loadClients();await loadSessions();renderClientsTab();renderSessionsTab();renderDashboard();
+    },
+    redo:async()=>{
+      if(deletedSessions.length)await sbClient.from('sessions').delete().eq('client_id',id);
+      await sbClient.from('clients').delete().eq('id',id);
+      await loadClients();await loadSessions();renderClientsTab();renderSessionsTab();renderDashboard();
+    }
+  });
   await loadClients();await loadSessions();renderClientsTab();renderSessionsTab();renderDashboard();
 }
 
@@ -1111,6 +1173,19 @@ async function recordCashPayment(){
   if(error){toast('Error: '+error.message,'error');return;}
   await sbClient.from('sessions').update({paid:true}).in('id',session_ids);
   toast('Cash payment recorded ✓','success');
+  const {data:newBatch}=await sbClient.from('cash_payments').select('*').eq('date',date).order('created_at',{ascending:false}).limit(1).single();
+  pushUndo({
+    label:'Record cash payment ('+session_ids.length+' sessions)',
+    undo:async()=>{
+      if(newBatch){await sbClient.from('sessions').update({paid:false}).in('id',session_ids);await sbClient.from('cash_payments').delete().eq('id',newBatch.id);}
+      await loadSessions();renderSessionsTab();renderCashSessionPicker();loadCashPayments();renderDashboard();
+    },
+    redo:async()=>{
+      const{error}=await sbClient.from('cash_payments').insert({date,session_ids,total:gross,vv_owed:gross*VV_CUT,paid_to_vv:false});
+      if(!error)await sbClient.from('sessions').update({paid:true}).in('id',session_ids);
+      await loadSessions();renderSessionsTab();renderCashSessionPicker();loadCashPayments();renderDashboard();
+    }
+  });
   await loadSessions();renderSessionsTab();renderCashSessionPicker();loadCashPayments();renderDashboard();
 }
 async function loadCashPayments(){const{data}=await sbClient.from('cash_payments').select('*').order('date',{ascending:false});renderCashNeedsAttention(data||[]);}
@@ -1216,6 +1291,19 @@ async function recordVVPayment(){
   if(error){toast('Error: '+error.message,'error');return;}
   await sbClient.from('sessions').update({paid:true}).in('id',session_ids);
   toast('Bank transfer recorded ✓','success');
+  const {data:newVV}=await sbClient.from('vv_payments').select('*').eq('date',date).order('created_at',{ascending:false}).limit(1).single();
+  pushUndo({
+    label:'Record bank transfer ('+session_ids.length+' sessions)',
+    undo:async()=>{
+      if(newVV){await sbClient.from('sessions').update({paid:false}).in('id',session_ids);await sbClient.from('vv_payments').delete().eq('id',newVV.id);}
+      await loadSessions();renderSessionsTab();renderVVSessionPicker();loadVVPayments();renderDashboard();
+    },
+    redo:async()=>{
+      const{error}=await sbClient.from('vv_payments').insert({date,session_ids,total:gross,you_get:NET(gross),receipt_sent:false});
+      if(!error)await sbClient.from('sessions').update({paid:true}).in('id',session_ids);
+      await loadSessions();renderSessionsTab();renderVVSessionPicker();loadVVPayments();renderDashboard();
+    }
+  });
   await loadSessions();renderSessionsTab();renderVVSessionPicker();loadVVPayments();renderDashboard();
 }
 async function loadVVPayments(){const{data}=await sbClient.from('vv_payments').select('*').order('date',{ascending:false});renderBankNeedsReceipt(data||[]);}
