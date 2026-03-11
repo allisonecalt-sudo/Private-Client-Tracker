@@ -260,8 +260,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem">
         <h2 id="dash-title" style="font-size:1.25rem;font-weight:700">Loading…</h2>
         <div style="display:flex;gap:.35rem;align-items:center">
-          <button class="cnav" onclick="shiftDM(-1)">‹</button>
-          <button class="cnav" onclick="shiftDM(1)">›</button>
+          <select id="dm-picker" onchange="pickDM(this.value)" style="font-size:.82rem;padding:.3rem .6rem;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);cursor:pointer;"></select>
           <button class="cnav" id="arr-btn" onclick="toggleArrange()" style="margin-left:.35rem;font-size:.7rem">✦ Arrange</button>
         </div>
       </div>
@@ -497,7 +496,7 @@ window.addEventListener('load',()=>{
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('theme',t);const b=document.getElementById('theme-btn');if(b)b.textContent=t==='dark'?'☀️ Light':'🌙 Dark';}
 function toggleTheme(){applyTheme((document.documentElement.getAttribute('data-theme')||'light')==='dark'?'light':'dark');if(chart)renderChart();}
 
-async function loadAll(){await loadClients();await loadSessions();renderHome();renderSessionsTab();renderClientsTab();}
+async function loadAll(){await loadClients();await loadSessions();buildDMPicker();renderHome();renderSessionsTab();renderClientsTab();}
 async function loadClients(){const{data}=await sb.from('clients').select('*').order('name');clients=data||[];fillClientSelects();}
 async function loadSessions(){const{data}=await sb.from('sessions').select('*').order('date',{ascending:false});sessions=data||[];}
 
@@ -542,6 +541,20 @@ async function doRedo(){if(!redoStack.length)return;const a=redoStack.pop();undo
 
 // ─── DASHBOARD ───────────────────────────────────────────────
 function shiftDM(d){dmM+=d;if(dmM>11){dmM=0;dmY++;}if(dmM<0){dmM=11;dmY--;}renderHome();}
+function buildDMPicker(){
+  const sel=document.getElementById('dm-picker');if(!sel)return;
+  sel.innerHTML='';
+  const now=new Date();
+  for(let i=12;i>=-6;i--){
+    let d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const opt=document.createElement('option');
+    opt.value=d.getFullYear()+'-'+d.getMonth();
+    opt.textContent=d.toLocaleDateString('en-IL',{month:'long',year:'numeric'});
+    if(d.getFullYear()===dmY&&d.getMonth()===dmM)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+function pickDM(val){const[y,m]=val.split('-').map(Number);dmY=y;dmM=m;renderHome();}
 function shiftCal(d){calM+=d;if(calM>11){calM=0;calY++;}if(calM<0){calM=11;calY--;}renderCal();}
 
 function renderHome(){
