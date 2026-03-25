@@ -34,8 +34,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 
 #app{display:none;padding-bottom:80px;}
-#login-screen{display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--bg);padding:1.5rem;}
-#login-screen.active{display:flex;}
+#login-screen{display:flex;min-height:100vh;align-items:center;justify-content:center;background:var(--bg);padding:1.5rem;}
+#login-screen.hidden{display:none;}
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:2.5rem 2rem;box-shadow:var(--shadowlg);max-width:360px;width:100%;text-align:center;}
 .login-card h2{font-size:1.3rem;margin-bottom:.5rem;}
 .login-card p{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;}
@@ -499,8 +499,7 @@ window.addEventListener('load',async()=>{
   applyTheme(localStorage.getItem('theme')||'light');
   sb=window.supabase.createClient(SB_URL,SB_KEY);
   const{data:{session}}=await sb.auth.getSession();
-  if(session){bootApp();}
-  else{document.getElementById('login-screen').classList.add('active');}
+  if(session){document.getElementById('login-screen').classList.add('hidden');bootApp();}
 });
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
@@ -509,7 +508,7 @@ async function doLogin(){
   errEl.style.display='none';
   const{error}=await sb.auth.signInWithPassword({email,password:pass});
   if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
-  document.getElementById('login-screen').classList.remove('active');
+  document.getElementById('login-screen').classList.add('hidden');
   bootApp();
 }
 function bootApp(){
@@ -527,7 +526,7 @@ function bootApp(){
   loadAll();
 }
 
-async function doLogout(){await sb.auth.signOut();document.getElementById('app').style.display='none';document.getElementById('login-screen').classList.add('active');}
+async function doLogout(){await sb.auth.signOut();document.getElementById('app').style.display='none';document.getElementById('login-screen').classList.remove('hidden');}
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('theme',t);const b=document.getElementById('theme-btn');if(b)b.textContent=t==='dark'?'☀️ Light':'🌙 Dark';}
 function toggleTheme(){applyTheme((document.documentElement.getAttribute('data-theme')||'light')==='dark'?'light':'dark');if(chart)renderChart();}
 
