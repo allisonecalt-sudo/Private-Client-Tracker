@@ -34,6 +34,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 
 #app{display:none;padding-bottom:80px;}
+#login-screen{display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--bg);padding:1.5rem;}
+#login-screen.active{display:flex;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:2.5rem 2rem;box-shadow:var(--shadowlg);max-width:360px;width:100%;text-align:center;}
+.login-card h2{font-size:1.3rem;margin-bottom:.5rem;}
+.login-card p{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem;}
+.login-card input{margin-bottom:.75rem;}
+.login-card .btn{width:100%;justify-content:center;margin-top:.5rem;}
+.login-err{color:var(--red);font-size:.8rem;margin-top:.75rem;display:none;}
 .hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
 .hdr h1{font-size:1rem;font-weight:700;}
 .htabs{display:flex;gap:.15rem;}
@@ -234,6 +242,16 @@ tbody tr:hover td{background:var(--surface2);}
 </style>
 </head>
 <body>
+<div id="login-screen">
+  <div class="login-card">
+    <h2>Practice Tracker</h2>
+    <p>Log in to access your data</p>
+    <input type="email" id="login-email" placeholder="Email" value="allisonecalt@gmail.com">
+    <input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-primary" onclick="doLogin()">Log in</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
 <div id="app">
   <div class="hdr">
     <div style="display:flex;align-items:center;gap:1.25rem">
@@ -251,6 +269,7 @@ tbody tr:hover td{background:var(--surface2);}
       <button class="btn btn-ghost btn-sm" id="undo-btn" onclick="doUndo()" disabled title="Undo">↩ Undo</button>
       <button class="btn btn-ghost btn-sm" id="redo-btn" onclick="doRedo()" disabled title="Redo">↪ Redo</button>
       <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()" title="Log out">🚪</button>
     </div>
   </div>
 
@@ -476,9 +495,24 @@ const undoStack=[],redoStack=[];
 let arranging=false,dragSrc=null;
 let secOrder=JSON.parse(localStorage.getItem('secOrder')||'null')||['todo','chart','cal','sched'];
 
-window.addEventListener('load',()=>{
+window.addEventListener('load',async()=>{
   applyTheme(localStorage.getItem('theme')||'light');
   sb=window.supabase.createClient(SB_URL,SB_KEY);
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){bootApp();}
+  else{document.getElementById('login-screen').classList.add('active');}
+});
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-err');
+  errEl.style.display='none';
+  const{error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  document.getElementById('login-screen').classList.remove('active');
+  bootApp();
+}
+function bootApp(){
   const now=new Date();
   calY=now.getFullYear();calM=now.getMonth();
   dmY=now.getFullYear();dmM=now.getMonth();
@@ -491,8 +525,9 @@ window.addEventListener('load',()=>{
   });
   document.getElementById('app').style.display='block';
   loadAll();
-});
+}
 
+async function doLogout(){await sb.auth.signOut();document.getElementById('app').style.display='none';document.getElementById('login-screen').classList.add('active');}
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('theme',t);const b=document.getElementById('theme-btn');if(b)b.textContent=t==='dark'?'☀️ Light':'🌙 Dark';}
 function toggleTheme(){applyTheme((document.documentElement.getAttribute('data-theme')||'light')==='dark'?'light':'dark');if(chart)renderChart();}
 
