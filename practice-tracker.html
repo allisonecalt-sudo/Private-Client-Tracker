@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Practice Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="practice-tracker-styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="hdr">
+        <div style="display: flex; align-items: center; gap: 1.25rem">
+          <h1>📋 Practice</h1>
+          <div class="htabs">
+            <button class="htab active" onclick="ST('home')">Home</button>
+            <button class="htab" onclick="ST('sessions')">Sessions</button>
+            <button class="htab" onclick="ST('clients')">Clients</button>
+            <button class="htab" onclick="ST('cash')">Cash</button>
+            <button class="htab" onclick="ST('bank')">Bank</button>
+            <button class="htab" onclick="ST('records')">Records</button>
+          </div>
+        </div>
+        <div class="hdr-right">
+          <button
+            class="btn btn-ghost btn-sm"
+            id="undo-btn"
+            onclick="doUndo()"
+            disabled
+            title="Undo"
+          >
+            ↩ Undo
+          </button>
+          <button
+            class="btn btn-ghost btn-sm"
+            id="redo-btn"
+            onclick="doRedo()"
+            disabled
+            title="Redo"
+          >
+            ↪ Redo
+          </button>
+          <button class="btn btn-outline btn-sm" id="theme-btn" onclick="toggleTheme()">
+            🌙 Dark
+          </button>
+        </div>
+      </div>
+
+      <div class="main">
+        <!-- HOME -->
+        <div id="tab-home" class="tab active">
+          <div
+            style="
+              display: flex;
+              align-items: baseline;
+              justify-content: space-between;
+              margin-bottom: 1.25rem;
+            "
+          >
+            <h2 id="dash-title" style="font-size: 1.25rem; font-weight: 700">Loading…</h2>
+            <div style="display: flex; gap: 0.35rem; align-items: center">
+              <select
+                id="dm-picker"
+                onchange="pickDM(this.value)"
+                style="
+                  font-size: 0.82rem;
+                  padding: 0.3rem 0.6rem;
+                  border: 1px solid var(--border);
+                  border-radius: 8px;
+                  background: var(--surface2);
+                  color: var(--text);
+                  cursor: pointer;
+                "
+              ></select>
+              <button
+                class="cnav"
+                id="arr-btn"
+                onclick="toggleArrange()"
+                style="margin-left: 0.35rem; font-size: 0.7rem"
+              >
+                ✦ Arrange
+              </button>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="sc g">
+              <div class="slabel">Earned</div>
+              <div class="sval" id="d-earned">₪—</div>
+              <div class="ssub">sessions happened</div>
+            </div>
+            <div class="sc a">
+              <div class="slabel">To collect</div>
+              <div class="sval" id="d-collect">₪—</div>
+              <div class="ssub">not yet received</div>
+            </div>
+            <div class="sc b">
+              <div class="slabel">Scheduled</div>
+              <div class="sval" id="d-sched" style="color: var(--muted)">—</div>
+              <div class="ssub">if all happen</div>
+            </div>
+          </div>
+          <div id="dash-secs"></div>
+        </div>
+
+        <!-- SESSIONS -->
+        <div id="tab-sessions" class="tab">
+          <div class="sh"><h2>Sessions</h2></div>
+          <div class="card">
+            <div class="ctitle">Log a Session</div>
+            <div class="frow">
+              <div class="fg">
+                <label>Client</label
+                ><select id="s-client"></select>
+              </div>
+              <div class="fg"><label>Date</label><input type="date" id="s-date" /></div>
+              <div class="fg" style="flex: 0; min-width: 160px">
+                <label>Status</label>
+                <select id="s-status">
+                  <option value="happened">✓ Happened</option>
+                  <option value="scheduled">◷ Scheduled</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="add-s-btn" onclick="addSession()">+ Add</button>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--dim); margin-top: 0.5rem">
+              Press Enter to quickly add
+            </div>
+          </div>
+          <div class="fbar">
+            <div class="frow" style="margin-bottom: 0.5rem">
+              <div class="fg" style="min-width: 120px">
+                <label>Status</label>
+                <select id="f-status" onchange="applySessionFilters()">
+                  <option value="all">All statuses</option>
+                  <option value="happened">Happened</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Client</label
+                ><select id="f-client" onchange="applySessionFilters()">
+                  <option value="all">All clients</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Type</label>
+                <select id="f-type" onchange="applySessionFilters()">
+                  <option value="all">Cash & Bank</option>
+                  <option value="cash">Cash only</option>
+                  <option value="bank">Bank only</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Month</label
+                ><select id="f-month" onchange="applySessionFilters()">
+                  <option value="all">All months</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="clearSF()" style="align-self: flex-end">
+                ✕ Clear
+              </button>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--dim)">Click column headers to sort</div>
+          </div>
+          <div id="sessions-list" class="card">
+            <div class="skel"></div>
+            <div class="skel"></div>
+          </div>
+        </div>
+
+        <!-- CLIENTS -->
+        <div id="tab-clients" class="tab">
+          <div class="sh"><h2>Clients</h2></div>
+          <div class="card">
+            <div class="ctitle">Add Client</div>
+            <div class="frow">
+              <div class="fg">
+                <label>Name</label><input type="text" id="c-name" placeholder="e.g. Miki" />
+              </div>
+              <div class="fg">
+                <label>Type</label
+                ><select id="c-type">
+                  <option value="cash">Cash</option>
+                  <option value="bank">Bank Transfer</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Rate (₪)</label><input type="number" id="c-rate" placeholder="420" />
+              </div>
+              <button class="btn btn-primary" onclick="addClient()">+ Add</button>
+            </div>
+          </div>
+          <div class="fbar">
+            <div class="frow">
+              <div class="fg" style="min-width: 120px">
+                <label>Type</label>
+                <select id="cf-type" onchange="renderClientsTab()">
+                  <option value="all">All</option>
+                  <option value="cash">Cash</option>
+                  <option value="bank">Bank</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Sort</label>
+                <select id="cf-sort" onchange="renderClientsTab()">
+                  <option value="name">Name A–Z</option>
+                  <option value="name-d">Name Z–A</option>
+                  <option value="rate">Rate ↑</option>
+                  <option value="rate-d">Rate ↓</option>
+                  <option value="sessions">Sessions ↑</option>
+                  <option value="sessions-d">Sessions ↓</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="clients-list" class="card"><div class="skel"></div></div>
+          <div id="archived-sec" style="display: none">
+            <div class="sdiv"><span>Archived</span></div>
+            <div id="archived-list" class="card"></div>
+          </div>
+        </div>
+
+        <!-- CASH -->
+        <div id="tab-cash" class="tab">
+          <div class="sh"><h2>Cash Payments</h2></div>
+          <div class="card">
+            <div class="ctitle">Record Cash Received</div>
+            <p
+              style="font-size: 0.81rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5"
+            >
+              Select sessions where you collected cash. You keep 85% — VV gets 15%.
+            </p>
+            <div id="cash-picker"><div class="skel"></div></div>
+            <div class="sumbox" id="cash-sum" style="display: none">
+              <div class="si"><span>Sessions</span><strong id="cash-cnt">0</strong></div>
+              <div class="si">
+                <span>You Keep (85%)</span
+                ><strong id="cash-net" style="color: var(--green)">₪0</strong>
+              </div>
+              <div class="si">
+                <span>VV Owed (15%)</span
+                ><strong id="cash-vv" style="color: var(--amber)">₪0</strong>
+              </div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label>Date Received</label><input type="date" id="cash-date" /></div>
+              <button class="btn btn-primary" onclick="recordCash()">Record Payment</button>
+            </div>
+          </div>
+          <div class="sdiv"><span>All cash batches</span></div>
+          <div id="cash-batches"><div class="skel"></div></div>
+        </div>
+
+        <!-- BANK -->
+        <div id="tab-bank" class="tab">
+          <div class="sh"><h2>Bank Transfer</h2></div>
+          <div class="card">
+            <div class="ctitle">Record Bank Transfer Received</div>
+            <p
+              style="font-size: 0.81rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5"
+            >
+              Select sessions paid by VV via bank transfer.
+            </p>
+            <div id="bank-picker"><div class="skel"></div></div>
+            <div class="sumbox" id="bank-sum" style="display: none">
+              <div class="si"><span>Sessions</span><strong id="bank-cnt">0</strong></div>
+              <div class="si"><span>Full Rate</span><strong id="bank-gross">₪0</strong></div>
+              <div class="si">
+                <span>You Get (85%)</span
+                ><strong id="bank-net" style="color: var(--green)">₪0</strong>
+              </div>
+            </div>
+            <div class="frow">
+              <div class="fg"><label>Date Received</label><input type="date" id="bank-date" /></div>
+              <button class="btn btn-primary" onclick="recordBank()">Record Payment</button>
+            </div>
+          </div>
+          <div class="sdiv"><span>All bank transfers</span></div>
+          <div id="bank-batches"><div class="skel"></div></div>
+        </div>
+
+        <!-- RECORDS -->
+        <div id="tab-records" class="tab">
+          <div class="sh"><h2>Records</h2></div>
+          <div class="fbar">
+            <div class="frow">
+              <div class="fg" style="min-width: 120px">
+                <label>View</label>
+                <select id="r-view" onchange="renderRecords()">
+                  <option value="batch">All batches</option>
+                  <option value="month">By month</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Type</label>
+                <select id="r-type" onchange="renderRecords()">
+                  <option value="all">Cash & Bank</option>
+                  <option value="cash">Cash only</option>
+                  <option value="bank">Bank only</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Status</label>
+                <select id="r-status" onchange="renderRecords()">
+                  <option value="all">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="complete">Completed</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Month</label
+                ><select id="r-month" onchange="renderRecords()">
+                  <option value="all">All months</option>
+                </select>
+              </div>
+              <div class="fg" style="min-width: 120px">
+                <label>Sort</label>
+                <select id="r-sort" onchange="renderRecords()">
+                  <option value="date-d">Date ↓</option>
+                  <option value="date-a">Date ↑</option>
+                  <option value="amt-d">Amount ↓</option>
+                  <option value="amt-a">Amount ↑</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="clearRF()" style="align-self: flex-end">
+                ✕ Clear
+              </button>
+            </div>
+          </div>
+          <div id="records-content">
+            <div class="skel"></div>
+            <div class="skel"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="bnav">
+      <button class="bnav-btn active" id="bn-home" onclick="ST('home')">
+        <span>🏠</span><span>Home</span>
+      </button>
+      <button class="bnav-btn" id="bn-sessions" onclick="ST('sessions')">
+        <span>📋</span><span>Sessions</span>
+      </button>
+      <button class="bnav-btn" id="bn-clients" onclick="ST('clients')">
+        <span>👤</span><span>Clients</span>
+      </button>
+      <button class="bnav-btn" id="bn-cash" onclick="ST('cash')">
+        <span>💵</span><span>Cash</span>
+      </button>
+      <button class="bnav-btn" id="bn-bank" onclick="ST('bank')">
+        <span>🏦</span><span>Bank</span>
+      </button>
+      <button class="bnav-btn" id="bn-records" onclick="ST('records')">
+        <span>📁</span><span>Records</span>
+      </button>
+    </nav>
+
+    <div id="toast" class="toast"></div>
+
+    <div
+      id="modal-session"
+      class="modal-bg"
+      style="display: none"
+      onclick="if (event.target === this) closeModal('session');"
+    >
+      <div class="modal">
+        <h3>Edit Session</h3>
+        <div class="fg" style="margin-bottom: 0.75rem">
+          <label>Client</label
+          ><select id="es-client"></select>
+        </div>
+        <div class="fg" style="margin-bottom: 0.75rem">
+          <label>Date</label><input type="date" id="es-date" />
+        </div>
+        <div class="fg" style="margin-bottom: 0.75rem">
+          <label>Status</label>
+          <select id="es-status">
+            <option value="happened">✓ Happened</option>
+            <option value="scheduled">◷ Scheduled</option>
+            <option value="paid">✓ Paid</option>
+          </select>
+        </div>
+        <div class="mact">
+          <button class="btn btn-ghost" onclick="closeModal('session')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveSessionEdit()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="modal-client"
+      class="modal-bg"
+      style="display: none"
+      onclick="if (event.target === this) closeModal('client');"
+    >
+      <div class="modal">
+        <h3>Edit Client</h3>
+        <div class="fg" style="margin-bottom: 0.75rem">
+          <label>Name</label><input type="text" id="ec-name" />
+        </div>
+        <div class="fg" style="margin-bottom: 0.75rem">
+          <label>Type</label
+          ><select id="ec-type">
+            <option value="cash">Cash</option>
+            <option value="bank">Bank Transfer</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom: 0.75rem">
+          <label>Rate (₪)</label><input type="number" id="ec-rate" />
+        </div>
+        <div class="mact">
+          <button class="btn btn-ghost" onclick="closeModal('client')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveClientEdit()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="practice-tracker-app.js"></script>
+  </body>
+</html>
