@@ -24,16 +24,28 @@ let secOrder = JSON.parse(localStorage.getItem('secOrder') || 'null') || [
   'sched',
 ];
 
+let bootedOnce = false;
+function showApp() {
+  if (bootedOnce) return;
+  bootedOnce = true;
+  document.getElementById('login-screen').classList.add('hidden');
+  bootApp();
+}
 window.addEventListener('load', async () => {
   applyTheme(localStorage.getItem('theme') || 'light');
-  sb = window.supabase.createClient(SB_URL, SB_KEY);
+  sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  });
+  // Fire on initial session restoration AND on later async refresh (mobile can be slow).
+  sb.auth.onAuthStateChange((event, session) => {
+    if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
+      showApp();
+    }
+  });
   const {
     data: { session },
   } = await sb.auth.getSession();
-  if (session) {
-    document.getElementById('login-screen').classList.add('hidden');
-    bootApp();
-  }
+  if (session) showApp();
 });
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
@@ -46,8 +58,7 @@ async function doLogin() {
     errEl.style.display = 'block';
     return;
   }
-  document.getElementById('login-screen').classList.add('hidden');
-  bootApp();
+  showApp();
 }
 function bootApp() {
   const now = new Date();
@@ -78,6 +89,7 @@ function bootApp() {
 
 async function doLogout() {
   await sb.auth.signOut();
+  bootedOnce = false;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').classList.remove('hidden');
 }
