@@ -73,7 +73,8 @@ body {
   display: none;
   padding-bottom: 80px;
 }
-#login-screen {
+#login-screen,
+#reset-screen {
   display: flex;
   min-height: 100vh;
   align-items: center;
@@ -81,7 +82,8 @@ body {
   background: var(--bg);
   padding: 1.5rem;
 }
-#login-screen.hidden {
+#login-screen.hidden,
+#reset-screen.hidden {
   display: none;
 }
 .login-card {
@@ -116,6 +118,24 @@ body {
   font-size: 0.8rem;
   margin-top: 0.75rem;
   display: none;
+}
+.login-ok {
+  color: var(--green);
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+  display: none;
+  line-height: 1.4;
+}
+.login-link {
+  display: inline-block;
+  margin-top: 0.85rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.login-link:hover {
+  color: var(--text);
 }
 .hdr {
   background: var(--surface);

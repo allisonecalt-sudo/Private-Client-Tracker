@@ -31,6 +31,7 @@ module.exports = [
         MouseEvent: 'readonly',
         TouchEvent: 'readonly',
         URL: 'readonly',
+        history: 'readonly',
         // CDN globals
         supabase: 'readonly',
         Chart: 'readonly',

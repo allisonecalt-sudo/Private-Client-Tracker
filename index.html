@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260519b">
+<link rel="stylesheet" href="styles.css?v=20260519c">
 </head>
 <body>
 <div id="login-screen">
@@ -20,7 +20,19 @@
     <input type="email" id="login-email" placeholder="Email" value="allisonecalt@gmail.com">
     <input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn btn-primary" onclick="doLogin()">Log in</button>
+    <a href="#" class="login-link" onclick="doForgotPassword(event)">Forgot password?</a>
     <div class="login-err" id="login-err"></div>
+    <div class="login-ok" id="login-ok"></div>
+  </div>
+</div>
+<div id="reset-screen" class="hidden">
+  <div class="login-card">
+    <h2>Set new password</h2>
+    <p>You're verified by email. Enter a new password.</p>
+    <input type="password" id="reset-pass" placeholder="New password (min 6 chars)">
+    <input type="password" id="reset-pass2" placeholder="Confirm new password" onkeydown="if(event.key==='Enter')doSetNewPassword()">
+    <button class="btn btn-primary" onclick="doSetNewPassword()">Save &amp; log in</button>
+    <div class="login-err" id="reset-err"></div>
   </div>
 </div>
 <div id="app">
@@ -251,6 +263,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20260519b"></script>
+<script src="app.js?v=20260519c"></script>
 </body>
 </html>

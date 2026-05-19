@@ -31,6 +31,14 @@ function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   bootApp();
 }
+function inRecoveryFlow() {
+  return window.location.hash.includes('type=recovery');
+}
+function showResetScreen() {
+  document.getElementById('login-screen').classList.add('hidden');
+  const rs = document.getElementById('reset-screen');
+  if (rs) rs.classList.remove('hidden');
+}
 window.addEventListener('load', async () => {
   applyTheme(localStorage.getItem('theme') || 'light');
   sb = window.supabase.createClient(SB_URL, SB_KEY, {
@@ -38,6 +46,10 @@ window.addEventListener('load', async () => {
   });
   // Fire on initial session restoration AND on later async refresh (mobile can be slow).
   sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY' || inRecoveryFlow()) {
+      showResetScreen();
+      return;
+    }
     if (
       session &&
       (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')
@@ -45,6 +57,10 @@ window.addEventListener('load', async () => {
       showApp();
     }
   });
+  if (inRecoveryFlow()) {
+    showResetScreen();
+    return;
+  }
   const {
     data: { session },
   } = await sb.auth.getSession();
@@ -54,13 +70,64 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-err');
+  const okEl = document.getElementById('login-ok');
   errEl.style.display = 'none';
+  if (okEl) okEl.style.display = 'none';
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) {
     errEl.textContent = error.message;
     errEl.style.display = 'block';
     return;
   }
+  showApp();
+}
+async function doForgotPassword(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const errEl = document.getElementById('login-err');
+  const okEl = document.getElementById('login-ok');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  if (!email) {
+    errEl.textContent = 'Enter your email above first.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+  okEl.textContent = 'Reset link sent. Check your email (also Spam) and tap the link.';
+  okEl.style.display = 'block';
+}
+async function doSetNewPassword() {
+  const p1 = document.getElementById('reset-pass').value;
+  const p2 = document.getElementById('reset-pass2').value;
+  const errEl = document.getElementById('reset-err');
+  errEl.style.display = 'none';
+  if (!p1 || p1.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (p1 !== p2) {
+    errEl.textContent = 'Passwords do not match.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+  // Clear the recovery fragment so a refresh doesn't bounce back here.
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  document.getElementById('reset-screen').classList.add('hidden');
   showApp();
 }
 function bootApp() {
