@@ -192,7 +192,12 @@ const crate = (id) => {
   const c = clients.find((c) => c.id === id);
   return c ? Number(c.rate) : 0;
 };
-const today = () => new Date().toISOString().split('T')[0];
+// Local-timezone ISO date (YYYY-MM-DD). toISOString() returns UTC, which
+// shifts dates back one day for IDT/JDT users — that bug pulled the
+// previous month's last session into "Earned" for the current month.
+const ymd = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const today = () => ymd(new Date());
 const fdate = (s) => {
   if (!s) return '—';
   return new Date(s + 'T12:00:00').toLocaleDateString('en-IL', {
@@ -320,8 +325,8 @@ function shiftCal(d) {
 }
 
 function renderHome() {
-  const ms = new Date(dmY, dmM, 1).toISOString().split('T')[0];
-  const me = new Date(dmY, dmM + 1, 0).toISOString().split('T')[0];
+  const ms = ymd(new Date(dmY, dmM, 1));
+  const me = ymd(new Date(dmY, dmM + 1, 0));
   const mo = sessions.filter((s) => s.date >= ms && s.date <= me);
   const earned = mo
     .filter((s) => ['happened', 'paid'].includes(status(s)))
@@ -489,8 +494,8 @@ function renderChart() {
       m += 12;
       y--;
     }
-    const ms = new Date(y, m, 1).toISOString().split('T')[0];
-    const me = new Date(y, m + 1, 0).toISOString().split('T')[0];
+    const ms = ymd(new Date(y, m, 1));
+    const me = ymd(new Date(y, m + 1, 0));
     const label = new Date(y, m, 1).toLocaleDateString('en-IL', { month: 'short' });
     const earned = sessions
       .filter((s) => s.date >= ms && s.date <= me && ['happened', 'paid'].includes(status(s)))
