@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260519c">
+<link rel="stylesheet" href="styles.css?v=20260519d">
 </head>
 <body>
 <div id="login-screen">
@@ -23,6 +23,7 @@
     <a href="#" class="login-link" onclick="doForgotPassword(event)">Forgot password?</a>
     <div class="login-err" id="login-err"></div>
     <div class="login-ok" id="login-ok"></div>
+    <button class="btn btn-ghost btn-sm login-nuke" onclick="nukeSession()" title="Clear stored session and reload">🚪 Log out / Reset</button>
   </div>
 </div>
 <div id="reset-screen" class="hidden">
@@ -33,6 +34,7 @@
     <input type="password" id="reset-pass2" placeholder="Confirm new password" onkeydown="if(event.key==='Enter')doSetNewPassword()">
     <button class="btn btn-primary" onclick="doSetNewPassword()">Save &amp; log in</button>
     <div class="login-err" id="reset-err"></div>
+    <button class="btn btn-ghost btn-sm login-nuke" onclick="nukeSession()" title="Cancel and clear session">🚪 Log out / Cancel</button>
   </div>
 </div>
 <div id="app">
@@ -263,6 +265,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20260519c"></script>
+<script src="app.js?v=20260519d"></script>
 </body>
 </html>

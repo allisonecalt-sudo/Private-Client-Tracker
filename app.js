@@ -157,6 +157,22 @@ function bootApp() {
   loadAll();
 }
 
+async function nukeSession() {
+  try {
+    await sb.auth.signOut();
+  } catch (_) {
+    /* ignore — local-only cleanup still proceeds */
+  }
+  try {
+    Object.keys(localStorage).forEach((k) => {
+      if (k.startsWith('sb-')) localStorage.removeItem(k);
+    });
+  } catch (_) {
+    /* ignore */
+  }
+  history.replaceState(null, '', window.location.pathname);
+  window.location.reload();
+}
 async function doLogout() {
   await sb.auth.signOut();
   bootedOnce = false;

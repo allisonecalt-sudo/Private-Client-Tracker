@@ -137,6 +137,19 @@ body {
 .login-link:hover {
   color: var(--text);
 }
+.login-nuke {
+  display: block;
+  width: 100%;
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  border-radius: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.login-nuke:hover {
+  color: var(--text);
+}
 .hdr {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
