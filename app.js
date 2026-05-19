@@ -38,7 +38,10 @@ window.addEventListener('load', async () => {
   });
   // Fire on initial session restoration AND on later async refresh (mobile can be slow).
   sb.auth.onAuthStateChange((event, session) => {
-    if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
+    if (
+      session &&
+      (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')
+    ) {
       showApp();
     }
   });
@@ -160,10 +163,7 @@ async function loadClients() {
   fillClientSelects();
 }
 async function loadSessions() {
-  const { data, error } = await sb
-    .from('sessions')
-    .select('*')
-    .order('date', { ascending: false });
+  const { data, error } = await sb.from('sessions').select('*').order('date', { ascending: false });
   if (error) throw error;
   sessions = data || [];
 }
