@@ -107,20 +107,64 @@ function toggleTheme() {
 }
 
 async function loadAll() {
-  await loadClients();
-  await loadSessions();
+  try {
+    await loadClients();
+    await loadSessions();
+  } catch (e) {
+    if (isAuthError(e)) {
+      await forceReLogin('Session expired. Please log in again.');
+      return;
+    }
+    throw e;
+  }
   buildDMPicker();
   renderHome();
   renderSessionsTab();
   renderClientsTab();
 }
+function isAuthError(e) {
+  if (!e) return false;
+  const status = e.status || e.statusCode;
+  const code = (e.code || '').toString();
+  const msg = (e.message || '').toLowerCase();
+  return (
+    status === 401 ||
+    status === 403 ||
+    code === 'PGRST301' ||
+    code === '401' ||
+    msg.includes('jwt') ||
+    msg.includes('not authenticated') ||
+    msg.includes('invalid token') ||
+    msg.includes('expired')
+  );
+}
+async function forceReLogin(reason) {
+  try {
+    await sb.auth.signOut();
+  } catch (_) {
+    /* ignore */
+  }
+  bootedOnce = false;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').classList.remove('hidden');
+  const errEl = document.getElementById('login-err');
+  if (errEl && reason) {
+    errEl.textContent = reason;
+    errEl.style.display = 'block';
+  }
+}
 async function loadClients() {
-  const { data } = await sb.from('clients').select('*').order('name');
+  const { data, error } = await sb.from('clients').select('*').order('name');
+  if (error) throw error;
   clients = data || [];
   fillClientSelects();
 }
 async function loadSessions() {
-  const { data } = await sb.from('sessions').select('*').order('date', { ascending: false });
+  const { data, error } = await sb
+    .from('sessions')
+    .select('*')
+    .order('date', { ascending: false });
+  if (error) throw error;
   sessions = data || [];
 }
 
