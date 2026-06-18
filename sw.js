@@ -4,7 +4,7 @@
 //   - CDN scripts (supabase-js, chart.js, fonts): cache-first, refreshed in background.
 //   - Anything else: passthrough.
 
-const VERSION = 'practice-tracker-v2';
+const VERSION = 'practice-tracker-v3';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
